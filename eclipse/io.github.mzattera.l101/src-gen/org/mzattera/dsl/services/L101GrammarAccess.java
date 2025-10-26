@@ -527,33 +527,34 @@ public class L101GrammarAccess extends AbstractElementFinder.AbstractGrammarElem
 		private final Keyword cOpDECKeyword_0_1_0_3 = (Keyword)cOpAlternatives_0_1_0.eContents().get(3);
 		private final Keyword cOpINVKeyword_0_1_0_4 = (Keyword)cOpAlternatives_0_1_0.eContents().get(4);
 		private final Keyword cOpNEGKeyword_0_1_0_5 = (Keyword)cOpAlternatives_0_1_0.eContents().get(5);
+		private final Keyword cOpABSKeyword_0_1_0_6 = (Keyword)cOpAlternatives_0_1_0.eContents().get(6);
 		private final Assignment cOperandAssignment_0_2 = (Assignment)cGroup_0.eContents().get(2);
 		private final RuleCall cOperandUnaryOperatorParserRuleCall_0_2_0 = (RuleCall)cOperandAssignment_0_2.eContents().get(0);
 		private final RuleCall cAtomicParserRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
 		
 		//UnaryOperator returns Expression: // right associative
-		//    {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+		//    {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS') operand=(UnaryOperator)
 		//    | Atomic
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
 		//// right associative
-		//   {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+		//   {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS') operand=(UnaryOperator)
 		//   | Atomic
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//// right associative
-		//   {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+		//   {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS') operand=(UnaryOperator)
 		public Group getGroup_0() { return cGroup_0; }
 		
 		//// right associative
 		//   {UnaryOperator}
 		public Action getUnaryOperatorAction_0_0() { return cUnaryOperatorAction_0_0; }
 		
-		//op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG')
+		//op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS')
 		public Assignment getOpAssignment_0_1() { return cOpAssignment_0_1; }
 		
-		//('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG')
+		//('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS')
 		public Alternatives getOpAlternatives_0_1_0() { return cOpAlternatives_0_1_0; }
 		
 		//'SQ'
@@ -573,6 +574,9 @@ public class L101GrammarAccess extends AbstractElementFinder.AbstractGrammarElem
 		
 		//'NEG'
 		public Keyword getOpNEGKeyword_0_1_0_5() { return cOpNEGKeyword_0_1_0_5; }
+		
+		//'ABS'
+		public Keyword getOpABSKeyword_0_1_0_6() { return cOpABSKeyword_0_1_0_6; }
 		
 		//operand=(UnaryOperator)
 		public Assignment getOperandAssignment_0_2() { return cOperandAssignment_0_2; }
@@ -1662,7 +1666,7 @@ public class L101GrammarAccess extends AbstractElementFinder.AbstractGrammarElem
 	}
 	
 	//UnaryOperator returns Expression: // right associative
-	//    {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+	//    {UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS') operand=(UnaryOperator)
 	//    | Atomic
 	//;
 	public UnaryOperatorElements getUnaryOperatorAccess() {

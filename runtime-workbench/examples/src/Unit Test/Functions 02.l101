@@ -1,0 +1,37 @@
+SHORT x IN B;
+
+start ON V:
+
+3 ->x;
+
+=INV(3);
+PRINT;
+=INV(x);
+PRINT;
+
+=NEG(3);
+PRINT;
+=NEG(x);
+PRINT;
+
+=ABS(3);
+PRINT;
+=ABS(x);
+PRINT;
+
+-3 ->x;
+
+=INV(-3);
+PRINT;
+=INV(x);
+PRINT;
+
+=NEG(-3);
+PRINT;
+=NEG(x);
+PRINT;
+
+=ABS(-3);
+PRINT;
+=ABS(x);
+PRINT;

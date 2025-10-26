@@ -75,10 +75,8 @@ public final class Extensions {
         case "INT":
           StringConcatenation _builder_1 = new StringConcatenation();
           _builder_1.append("/");
-          _builder_1.append(L101Generator.UP_DOWN);
+          _builder_1.append(L101Generator.UP);
           _builder_1.newLineIfNotEmpty();
-          _builder_1.append("-");
-          _builder_1.newLine();
           _switchResult = _builder_1.toString();
           break;
         case "DEC":
@@ -107,6 +105,13 @@ public final class Extensions {
           _builder_4.append(L101Generator.DIV);
           _builder_4.newLineIfNotEmpty();
           _switchResult = _builder_4.toString();
+          break;
+        case "ABS":
+          StringConcatenation _builder_5 = new StringConcatenation();
+          _builder_5.append("A");
+          _builder_5.append(L101Generator.UP_DOWN);
+          _builder_5.newLineIfNotEmpty();
+          _switchResult = _builder_5.toString();
           break;
         default:
           throw new IllegalArgumentException(("Unrecognized operator: " + s));

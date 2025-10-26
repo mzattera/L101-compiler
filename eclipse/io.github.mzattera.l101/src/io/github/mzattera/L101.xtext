@@ -86,7 +86,7 @@ MultiplicativeOperator returns Expression: // left associative
 ;
 
 UnaryOperator returns Expression: // right associative
-	{UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+	{UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG' | 'ABS') operand=(UnaryOperator)
 	| Atomic
 ;
 

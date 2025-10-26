@@ -444,7 +444,8 @@ public class L101SemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *             op='INT' | 
 	 *             op='DEC' | 
 	 *             op='INV' | 
-	 *             op='NEG'
+	 *             op='NEG' | 
+	 *             op='ABS'
 	 *         ) 
 	 *         operand=UnaryOperator
 	 *     )

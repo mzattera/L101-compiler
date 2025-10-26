@@ -989,6 +989,17 @@ ruleUnaryOperator returns [EObject current=null]
 							}
 							setWithLastConsumed($current, "op", lv_op_1_6, null);
 						}
+						    |
+						lv_op_1_7='ABS'
+						{
+							newLeafNode(lv_op_1_7, grammarAccess.getUnaryOperatorAccess().getOpABSKeyword_0_1_0_6());
+						}
+						{
+							if ($current==null) {
+								$current = createModelElement(grammarAccess.getUnaryOperatorRule());
+							}
+							setWithLastConsumed($current, "op", lv_op_1_7, null);
+						}
 					)
 				)
 			)

@@ -1,0 +1,59 @@
+SHORT x IN B;
+
+start ON V:
+
+// To deal with emulator issues
+//INPUT ->x;
+
+4 ->x;
+
+=SQ(4);
+PRINT;
+=SQ(x);
+PRINT;
+
+=SQRT(4);
+PRINT;
+=SQRT(x);
+PRINT;
+
+-4 ->x;
+
+=SQ(-4);
+PRINT;
+=SQ(x);
+PRINT;
+
+2.33 ->x;
+
+=INT(2.33);
+PRINT;
+=INT(x);
+PRINT;
+
+=DEC(2.33);
+PRINT;
+=DEC(x);
+PRINT;
+
+=NEG(2.33);
+PRINT;
+=NEG(x);
+PRINT;
+
+-2.33 ->x;
+
+=INT(-2.33);
+PRINT;
+=INT(x);
+PRINT;
+
+=DEC(-2.33);
+PRINT;
+=DEC(x);
+PRINT;
+
+=NEG(-2.33);
+PRINT;
+=NEG(x);
+PRINT;

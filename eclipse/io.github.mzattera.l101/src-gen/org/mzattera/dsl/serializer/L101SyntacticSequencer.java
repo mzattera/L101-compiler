@@ -59,6 +59,7 @@ public class L101SyntacticSequencer extends AbstractSyntacticSequencer {
 	 *     (rule start) (ambiguity) 'A' (rule start)
 	 *     (rule start) (ambiguity) 'INPUT' (rule start)
 	 *     (rule start) (ambiguity) negative?='-'
+	 *     (rule start) (ambiguity) op='ABS'
 	 *     (rule start) (ambiguity) op='DEC'
 	 *     (rule start) (ambiguity) op='INT'
 	 *     (rule start) (ambiguity) op='INV'
@@ -82,6 +83,7 @@ public class L101SyntacticSequencer extends AbstractSyntacticSequencer {
 	 *     '('+
 	 *
 	 * This ambiguous syntax occurs at:
+	 *     (rule start) (ambiguity) op='ABS'
 	 *     (rule start) (ambiguity) op='DEC'
 	 *     (rule start) (ambiguity) op='INT'
 	 *     (rule start) (ambiguity) op='INV'

@@ -1,0 +1,22 @@
+LONG x IN B;
+
+start ON V:
+
+-2.33 ->x;
+
+=INT(-2.33);
+PRINT;
+=INT(x);
+PRINT;
+
+=DEC(-2.33);
+PRINT;
+=DEC(x);
+PRINT;
+
+-3 -> x;
+
+=INV(-3);
+PRINT;
+=INV(x);
+PRINT;

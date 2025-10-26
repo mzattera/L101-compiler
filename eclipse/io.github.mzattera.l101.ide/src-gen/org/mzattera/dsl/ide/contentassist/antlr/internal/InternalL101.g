@@ -1204,6 +1204,12 @@ rule__UnaryOperator__OpAlternatives_0_1_0
 		'NEG'
 		{ after(grammarAccess.getUnaryOperatorAccess().getOpNEGKeyword_0_1_0_5()); }
 	)
+	|
+	(
+		{ before(grammarAccess.getUnaryOperatorAccess().getOpABSKeyword_0_1_0_6()); }
+		'ABS'
+		{ after(grammarAccess.getUnaryOperatorAccess().getOpABSKeyword_0_1_0_6()); }
+	)
 ;
 finally {
 	restoreStackSize(stackSize);

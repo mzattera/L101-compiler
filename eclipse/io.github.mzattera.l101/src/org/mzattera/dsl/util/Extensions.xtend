@@ -62,8 +62,7 @@ final class Extensions {
 				L101Generator.SQRT
 			case "INT": // Integral part (everything left of comma)
 			'''
-				/«L101Generator.UP_DOWN»
-				-
+				/«L101Generator.UP»
 			'''
 			case "DEC": // Decimal part (everything right of comma)
 			'''
@@ -79,6 +78,10 @@ final class Extensions {
 			'''
 				A«L101Generator.DIV»
 				«L101Generator.DIV»
+			'''
+			case "ABS": // Absolute value
+			'''
+				A«L101Generator.UP_DOWN»
 			'''
 			default: // guard
 				throw new IllegalArgumentException("Unrecognized operator: " + s)

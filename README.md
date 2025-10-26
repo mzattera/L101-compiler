@@ -87,6 +87,7 @@ Therefore, it is advised you allocate B and C first, then "left" part of F, then
 
 The "accumulator" register A can be accessed with keyword 'A'.
 
+
 ### Expressions
 
 The most basic expressions are:
@@ -104,15 +105,23 @@ More complex expressions can be created by using brackets and the below operator
 
 **Notice operators are described in decreasing order of precedence (with unary operators being the one with highest priority.**
 
+
 #### Unary Operators (functions)
 
 Unary operators operate on a single expression; their result is always stored in A.
 
-  * ``SQ`` squares expression.
   * ``SQRT`` extract square root of given expression.
+  * ``SQ`` squares expression.
+  * ``ABS`` takes absolute value for the expression.
+  * ``NEG`` negates one expression (= -expression).
   * ``INT`` takes integer part of an expression (everything left of the decimal separator).
   * ``DEC`` takes decimal part of an expression (everything right of the decimal separator).
-  ' ``INV``  | 'NEG'
+    
+	**Note** I could not find in any P101 manual a clear description of how this works for negative numbers. 
+	In the P203 manual the same instruction is suppose to preserve sign (so DEC(-1.2)=-0.2). However, P101Emul emulator
+	always makes this positive.
+	
+  * ``INV`` calculate the inverse (reciprocal) of one expression (= 1/expression).
 
 
 #### Assignment
