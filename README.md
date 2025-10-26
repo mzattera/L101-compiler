@@ -27,9 +27,9 @@ The runtime-workbench contains an example workbench with many examples.
 
 Currently, this application generates:
 
-  1. .P101 files: these are UTF-8 files containing the listing of the compiled P101 program.
+  1. ``.P101`` files: these are UTF-8 files containing the listing of the compiled P101 program.
                 
-  2. .666  files: these are files for the [P101Emul emulator](http://www.claudiolarini.altervista.org/emul2.htm).
+  2. ``.666``  files: these are files for the [P101Emul emulator](http://www.claudiolarini.altervista.org/emul2.htm).
 
   **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
 	The emulator needs the card to be renamed as "P101CARD.nnn" where "nnn" is a 3-digit number 000-999 and put in the folder "SCHEDE".
@@ -40,7 +40,7 @@ Currently, this application generates:
     Windows 10 (sometimes one single keystroke on the emulated P101 keyboard generates multiple strokes in the emulator,
     which might cause issues when running a program); beside this, programs appear to run fine in this emulator.
 
-  3. .pmc  files: these are card files for the [P101JavaPlus emulator](http://www.museotecnologicamente.it/collezione/programma-101/).
+  3. ``.pmc``  files: these are card files for the [P101JavaPlus emulator](http://www.museotecnologicamente.it/collezione/programma-101/).
     The files seem to load correctly in the emulator using "Card Choice" button but I encountered issues running them.
     I think these issues come from the emulator, not from the compiled code that appears correct.
     This is probably due to the fact that constants in program are not supported.				 
@@ -56,7 +56,7 @@ Any L101 program starts with variable declarations followed by program statement
 ### Comments
 
 ```
-// This is an in-line Comments
+// This is an single-line / in-line comment
 
 /*
 This is a multi-line
@@ -68,7 +68,7 @@ comment.
 
 P101 has 5 numeric registries (B, C, D, E, F) that can be used to store data, each one can be used either as a 22 digits register (including sign and comma separator) or treated as two 11 digits registers.
 
-L101 allows you to declare variables that will be placed in these registers using ``LONG`` (for using the full register) and ``SHORT`` (for using half register) keywords.
+L101 allows you to declare variables that will be placed in these registers using ``LONG..IN`` (for using the full register) and ``SHORT..IN`` (for using half register) keywords.
 
 Notice how each line ends with a ``;``.
 
@@ -82,9 +82,9 @@ SHORT x IN F, y IN F/;
 ```
 
 Registers F, E, and D in this order are also used to store code, allowing for longer programs, if they are not used for variables; when split, right part is used for code earlier then left part.
-Therefore, it is advised you allocate B and C first, then "left" part of F, then its "right" part and so on for E and D.
+Therefore, it is advised you allocate B and C first, then "left" part of F, then its "right" part, and so on for E and D.
 
-The "accumulator" register A can be accessed with keyword 'A'.
+The "accumulator" register A can be accessed with keyword ``A``.
 
 
 ### Expressions
@@ -95,14 +95,13 @@ The most basic expressions are:
   
   * ``INPUT`` which instructs P101 to stop and ask for an input value, which will be used as the expression value.
   
-  * Numeric constants (numbers with no leading zeros, with an optional decimal separator and minus sign).
-    Notice storing constants takes up a lot of code space, so typically P101 code requires user to manually enter constants.  
+  * Numeric constants (numbers with no leading zeros, with an optional decimal separator and minus sign, e.g. 1, 2.0, -3.14).
+    Notice storing constants takes up a lot of code space, so typically P101 code requires user to manually enter them instead.  
 	
   * A variable name.
   
 More complex expressions can be created by using brackets and the below operators.
-
-**Notice operators are described in decreasing order of precedence (with unary operators being the one with highest priority).**
+**Operators are described in decreasing order of precedence** (with unary operators being the one with highest priority).
 
 
 #### Unary Operators (functions)
@@ -155,14 +154,14 @@ L101 also has compound assignment operators, they always target the A register:
 
 (``+=`` | ``-=`` | ``/=`` | ``*=`` | ``%=``) (_variable_ | ``INPUT`` | `A` | _constant_) ``;``
 
-Similarly to other programming languages, ``+= 5`` performs A=A+5 (which is equivalent to L101 code ``=A+5``).
-Notice that the argument cannot be any expression; it might be a variable, constant, the accumulator value or ``INPUT`` meaning the machine will stop and wait for user input.
+Similarly to other programming languages, ``+=5`` performs A=A+5 (which is equivalent to L101 code ``=A+5``).
+Notice that the argument cannot be any expression; it must be a variable, a constant, the accumulator value or ``INPUT`` indicating the machine must stop and wait for user input.
 
 _variable_ ``<->`` _expression_ ``;``
 
-will calculate the value of _expression_ then will store it into _variable_. In addition, current value of _variable_ will be transferred into A register.
+will calculate the value of _expression_ and store it into _variable_. In addition, current value of _variable_ will be transferred into A register.
 
-Finally you can store a constant value or the user input into a variable like this:
+Finally, you can store a constant value or the user input into a variable like this:
 
 (_constant_ | ``INPUT``) ``->`` _variable_ ``;``
 
@@ -171,24 +170,93 @@ Below some examples:
 ```
 SHORT x IN B/;
 
-// A=3
-=3;
+// Put 42 in x
+42 -> x;
 
-// A=A+5
-+=5;
+// A=3
+= 3;
+
+// A=A+x
++= x;
 
 // A=A times the number user enters
 *= INPUT;
 
-// Put 42 in x
-42 -> x;
-
-// Calculates x^2+5 and stores result in x.
-// Previous value of x (42) is moved to A.
+// Calculates x = x^2+5 and stores it in x.
+// Previous value of x (42) is stored in A.
 x <-> SQ(x) * 5;  
 ```
 
+#### PRINT
 
+``PRINT`` (_constant_ | _variable_ | ``A`` | ``NL``)* ``;``
 
+will print a given constant value, the value of a given variable, the content of the A register or an empty line respectively.
+Multiple values to print can be separated with commas. ``PRINT`` alone just prints an empty line.
 
+Below, valid examples of ``PRINT`` usage.
+
+```
+PRINT 3, x;
+PRINT A, 4;
+PRINT;
+```
+
+#### Labels and GOTO
+
+L101 allows unconditional jumps by using the ``GOTO`` statement:
+
+``GOTO`` _label_ ``;``
+
+Will cause execution to jump to the position in the code indicated by _label_. To define a label you simple enter its name followed by column:
+
+_label_ ``:``
+
+The P101 has 4 keys labeled "V"-"Z" that, when pressed, will cause the P101 to execute code from a given position (this is the standard way to start a program stored in memory.
+Labels can be associated with these key like this:
+
+_label_  ``ON``  (``V`` | ``W`` | ``Y`` | ``Z``) ``:``
+
+The below code runs when user presses "V" and keeps asking for numbers to square, until the user presses "Z";
+
+```
+SHORT x IN B/;
+ 
+start ON V: 	// When user presses "V" key, execution starts from this point
+	
+	INPUT ->x; 	// Reads user input and stores it in x
+	=SQ(x);		// A = X squared
+	PRINT A;	// Prints result
+	
+	GOTO start;	// Next number
+	
+stop ON Z:		// If user presses "Z", execution jumps here and program ends
+```
+
+#### IF...THEN...ELSE
+
+In L101, the IF statement has the following structure:
+
+``IF`` _assigment_ ``THEN`` _then_statements_ ``ELSE`` _else_statements_ ``END``
+
+_assignment_ is a simple (``=``) or compound assignment (e.g. ``+=``) that is executed first;
+if after the assignment A > 0, then _then_statements_ are executed, otherwise (if A <= 0) _else_statements_ are executed.
+
+Either ``THEN`` or ``ELSE`` might be omitted.
+
+Below code print numbers 4..3..2..1..42
+
+```
+start ON V:
+
+	=5;				// A = 5;
+	
+loop:	
+	IF -=1 THEN		// A = A-1; if A>0 print it and loop
+		PRINT A;
+		GOTO loop;
+	ELSE
+		PRINT 42;	// else print 42 and quit
+	END
+```
 
