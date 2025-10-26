@@ -9,13 +9,13 @@ LONG fact IN C;
 
 start ON V:
 
-	INPUT->n; // ask user where to stop
-	1-> fact;
+	INPUT -> n; // ask user where to stop
+	1 -> fact;
 	
 	FOR 1->i; =i-n; i<->i+1 DO // for each number
 	
 		// compute i!
-		fact<->fact*i;
+		fact <-> fact*i;
 		
 		PRINT i, fact, NL;
 	END

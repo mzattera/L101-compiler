@@ -1,0 +1,517 @@
+**** 0: Content
+
+This document describes how jumps and control statements are compiled.
+
+As there are P101 limitations on number of jumps used (see below), the compiler tries to reuse them as much as possible.
+This causes compiler code to become a bit complex and difficult to read.
+
+This document describes how the implementation works. The differrent "chapters" show how the implementation evolved and the
+rationale behind it. For this reason, the code sniplets shown might not reflect current (final) state of the code.
+
+For jumps, P101 uses a limited set of paired source and destination instructions. These can be conditional or un-conditional.
+When a source instruction is found, execution goes to corresponding destination instruction (only if A>0 for conditional jumps).
+
+Since the pairs are limited, the compiler allocates needed ones at the beginning of compilation 
+with assignJumps() function(s) and stores them in condDest and uncondDest 
+maps (Pair(Statement,origin) -> corresponding jump destinations needed).
+
+getSource() and getDestination() fetches source and destination instruction for a given statement from these Maps.
+
+
+
+**** 1: Implementation of loop statements
+
+
+With this approach, control functions are compiled as:
+
+	def dispatch CharSequence compile(UntilStatement stmt) {
+		'''
+			«getDestination(stmt, uncondDest)»	Jump destination 1 (unconditional)
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			If A>0 jump to destination 2
+			«compile(stmt.body)»				Execute UNITL body
+			«getSource(stmt, uncondDest)»		Unconditional jump to destination 1
+			«getDestination(stmt, condDest)»	Jump destination 2 (conditional)
+		'''
+	}
+
+	def dispatch CharSequence compile(ForStatement stmt) {
+		'''
+			«compile(stmt.init)»				Initialize loop
+			«getDestination(stmt, uncondDest)»	Jump destination 1 (unconditional)
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			If A>0 jump to destination 2
+			«compile(stmt.body)»				Execute FOR body
+			«compile(stmt.end)»					Execute end-of-loop instruction
+			«getSource(stmt, uncondDest)»		Unconditional jump to destination 1
+			«getDestination(stmt, condDest)»	Jump destination 2 (conditional)
+		'''
+	}
+
+	def dispatch CharSequence compile(WhileStatement stmt) {
+		'''
+			«getDestination(stmt, condDest)»	Jump destination 1 (conditional)
+			«compile(stmt.body)»				Execute WHILE body
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			Jump destination 2 (conditional)
+		'''
+	}
+
+	def dispatch CharSequence compile(IfStatement stmt) {
+		'''
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			If A>0 jump to destination 1 (THEN)
+			«IF (stmt.elseClause !== null)»
+				«compile(stmt.elseClause)»		Otherwise, execute ELSE
+			«ENDIF»
+			«getSource(stmt, uncondDest)»		Unconditional jump to destination 2: END of IF
+			«getDestination(stmt, condDest)»	Jump destination 1: THEN (conditional)
+			«compile(stmt.thenClause)»			Execute THEN
+			«getDestination(stmt, uncondDest)»	Jump destination 2 (unconditional)
+		'''
+	}
+
+Code sniplet for assignJmps() showing how jumps are allocated for UNTIL instruction
+(see above to see how these jumps are used in compilation).
+Notice that a support class is used for the assignments.
+
+				[...]
+				JumpInstructionsAllocator jumps
+				[...]
+				UntilStatement: { // UNTIL needs 2 labels
+					if (!jumps.assignUnconditionalJump(stmt, uncondDest))
+						return stmt;
+					if (!jumps.assignConditionalJump(stmt, condDest))
+						return stmt;
+
+					// Allocate labels for instructions in the body
+					tmp = assignJumps(stmt.body, jumps, condDest, uncondDest, continueDest, breakDest)
+					if(tmp !== null) return tmp
+				}
+				[...]
+				
+
+				
+***** 2: Simple implementation for GOTO, CONTINUE & BREAK 
+
+
+GOTO is simply implemented with a single jump instruction to its label (destination instruction):
+
+	def dispatch CharSequence compile(Label lbl) {
+		getDestination(lbl, uncondDest)
+	}
+
+	def dispatch CharSequence compile(GotoStatement stmt) {
+		getSource(stmt.label, uncondDest)
+	}
+
+For CONTINUE and BREAK in some cases (one indeed) we can re-use unconditional labels allocated for the containing loop (if any).
+If not, we added two maps continueDest and breakDest that map a loop into corresponding jump destination to 
+use for a CONTINUE and BREAK statements.
+	
+in assignJumps() CONTINUE and BREAK check if a jump destination is already available for the enclosing loop
+(allocated by another BREAK/CONTINUE statement in the same loop). If not, they proceed with allocation:
+
+				[...]
+				ContinueStatement: {
+					val loop = stmt.getContainingLoop
+					if ((continueDest.get(loop) === null) && !(loop instanceof UntilStatement)) {
+						// cannot reuse label, jump not already allocated, proceed with allocation
+						if (jumps.assignUnconditionalJump(loop, continueDest))
+							return stmt;
+					}
+				}
+				BreakStatement: {
+					val loop = stmt.getContainingLoop
+					if (breakDest.get(loop) === null) {
+						// cannot reuse label, jump not already allocated, proceed with allocation
+						if (jumps.assignUnconditionalJump(loop, breakDest))
+							return stmt;
+					}
+				}
+				[...]
+
+At this point, when compiling a loop, we must check if extra instructions for break and continue are needed.
+
+	def dispatch CharSequence compile(UntilStatement stmt) {
+		// true if there is any BREAK in the loop (corresponding jump instruction appears as allocated)
+		val break = breakDest.containsKey(stmt)
+		// CONTINUE will reuse unconditional jump for this statement
+		'''
+			«getDestination(stmt, uncondDest)»
+			«compile(stmt.condition)»
+			«getSource(stmt, condDest)»
+			«compile(stmt.body)»
+			«getSource(stmt, uncondDest)»
+			«getDestination(stmt, condDest)»
+			«IF (break)»
+				«getDestination(stmt, breakDest)»
+			«ENDIF»
+		'''
+	}
+
+	def dispatch CharSequence compile(ForStatement stmt) {
+		// true if there is any BREAK in the loop (corresponding jump instruction appears as allocated)
+		val break = breakDest.containsKey(stmt)
+		// true if there is any CONTINUE in the loop (corresponding jump instruction appears as allocated)
+		val continue = continueDest.containsKey(stmt)
+
+		'''
+			«compile(stmt.init)»
+			«getDestination(stmt, uncondDest)»
+			«compile(stmt.condition)»
+			«getSource(stmt, condDest)»
+			«compile(stmt.body)»
+			«IF (continue)»
+				«getDestination(stmt, continueDest)»
+			«ENDIF»
+			«compile(stmt.end)»
+			«getSource(stmt, uncondDest)»
+			«getDestination(stmt, condDest)»
+			«IF (break)»
+				«getDestination(stmt, breakDest)»
+			«ENDIF»
+		'''
+	}
+
+	def dispatch CharSequence compile(WhileStatement stmt) {
+		// true if there is any BREAK in the loop (corresponding jump instruction appears as allocated)
+		val break = breakDest.containsKey(stmt)
+		// true if there is any CONTINUE in the loop (corresponding jump instruction appears as allocated)
+		val continue = continueDest.containsKey(stmt)
+
+		'''
+			«getDestination(stmt, condDest)»
+			«compile(stmt.body)»
+			«IF (continue)»
+				«getDestination(stmt, continueDest)»
+			«ENDIF»
+			«compile(stmt.condition)»
+			«getSource(stmt, condDest)»
+			«IF (break)»
+				«getDestination(stmt, breakDest)»
+			«ENDIF»
+		'''
+	}
+
+	def dispatch CharSequence compile(ContinueStatement stmt) {
+		val loop = stmt.getContainingLoop
+		if (loop instanceof UntilStatement) {
+			// reuse label; jump to unconditional label allocated to UNTIL loop
+			'''
+				«getSource(loop, uncondDest)»
+
+
+				
+***** 3: Optimization of GOTO within IF
+
+
+If a GOTO statement is contained inside an IF, the resulting compiled code can be simplified.
+The GOTO can be implemented as a conditional jump destination, that leverages the check already performed by the IF:
+
+Code BEFORE optimization; IF needs 2 jump instructions:
+
+	def dispatch CharSequence compile(IfStatement stmt) {
+		'''
+			«compile(stmt.condition)»			Compiles condition to load result in A
+			«getSource(stmt, condDest)»			if A>0 jumps to THEN body
+			«IF (stmt.elseClause !== null)»
+				«compile(stmt.elseClause)»		If present, compile the ELSE body
+			«ENDIF»
+			«getSource(stmt, uncondDest)»		At end of ELSE body, jump to END
+			«getDestination(stmt, condDest)» 	Destination instruction for THEN body
+			«compile(stmt.thenClause)»			Execute then
+			«getDestination(stmt, uncondDest)»	Destination instruction for END
+		'''
+	}
+	
+Pseudo-code AFTER optimization for IF <cond> THEN GOTO <lbl> END; IF needs no jump instructions
+One instruction is still needed for the GOTO; note that this is now a conditional jump (it was unconditional before).
+
+	def dispatch CharSequence compile(IfStatement stmt) {
+		'''
+			«compile(stmt.condition)»			Compiles condition to load result in A
+			«getSource(<lbl>, condDest)»			if A>0 jumps to <lbl>
+			«IF (stmt.elseClause !== null)»
+				«compile(stmt.elseClause)»		If present, compile the ELSE body
+			«ENDIF»
+		'''
+	}
+	
+In order to implement this:
+
+	* isOptimizable() extension is created, to check if the IF statement is optimizable (that is, it contains a GOTO).
+	* Jumps for THEN are allocated only if IF statement is not optimizable and contains a GOTO
+	* IF statement, if optimized, is compiled accordingly
+	* If (and only if) GOTO is optimized, destination instruction needs to be a conditional one
+	* GOTO and Label now need to be compiled accordingly whether conditional or unconditional jumps are used.
+	
+Code sniplets added below:
+
+Allocation of jumps:
+
+				[...]
+				Label: {
+					if (stmt.target !== null) {
+						// this is assigned to a key, therefore a jump needs to be allocated always
+						keys.put(stmt, "A" + stmt.target)
+					}
+				}
+				GotoStatement: {
+					if (stmt.isOptimizable) {
+						// Can be optimized with a single conditional jump within an IF
+						if (condDest.get(stmt.label) === null) {
+							// no jump assigned to target label; assign it now
+							if (!jumps.assignConditionalJump(stmt.label, condDest))
+								return stmt;
+						}
+					} else { // no optimization, use unconditional jumps
+						if ((stmt.label.target === null) && (uncondDest.get(stmt.label) === null)) {
+							// no jump assigned to target label; assign it now
+							// notice that if label is assigned to a key, the jump is allocated by the Label: itself
+							if (!jumps.assignUnconditionalJump(stmt.label, uncondDest))
+								return stmt;
+						}
+					}
+				}
+				[...]
+				IfStatement: {
+					if (!stmt.isOptimizable) {
+						// If needs 2 labels
+						if (!jumps.assignUnconditionalJump(stmt, uncondDest))
+							return stmt;
+						if (!jumps.assignConditionalJump(stmt, condDest))
+							return stmt;
+					} 
+				[...]
+				
+Compilation:
+
+	def dispatch CharSequence compile(Label lbl) {
+		// Notice that with GOTO optimization a label can be target of a conditional or unconditional jump (or both).
+		'''
+			«IF getDestination(lbl, uncondDest) !== null»
+				«getDestination(lbl, uncondDest)»
+			«ENDIF»		
+			«IF getDestination(lbl, condDest) !== null»
+				«getDestination(lbl, condDest)»
+			«ENDIF»		
+		'''
+	}
+	
+	def dispatch CharSequence compile(GotoStatement stmt) {
+		if (stmt.isOptimizable) // use conditional jumps
+			getSource(stmt.label, condDest)
+		else
+			getSource(stmt.label, uncondDest)
+	}
+	
+	def dispatch CharSequence compile(IfStatement stmt) {
+		if (stmt.isOptimizable) {
+			// Optimize jumps based on the contained instructions
+			val ts = stmt.firstThenStatement
+			switch (ts) {
+				GotoStatement: '''
+					«compile(stmt.condition)»
+					«getSource(ts.label, condDest)»
+					«IF (stmt.elseClause !== null)»
+						«compile(stmt.elseClause)»
+					«ENDIF»
+				'''
+				default: // guard, should never happen
+					throw new IllegalArgumentException("Statement cannot be optimized")
+			}
+		} else { // No optimization
+			'''
+				«compile(stmt.condition)»
+				«getSource(stmt, condDest)»
+				«IF (stmt.elseClause !== null)»
+					«compile(stmt.elseClause)»
+				«ENDIF»
+				«getSource(stmt, uncondDest)»
+				«getDestination(stmt, condDest)»
+				«compile(stmt.thenClause)»
+				«getDestination(stmt, uncondDest)»
+			'''
+		}
+	}
+
+	
+				
+***** 4: Optimization of BREAK and CONTINUE within IF
+
+This follows same principles described for GOTO. BREAK and CONTINE can be optimized as follows:
+	
+UNTIL:
+
+	def dispatch CharSequence compile(UntilStatement stmt) {
+		'''
+			«getDestination(stmt, uncondDest)»	Jump destination 1 (unconditional)
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			If A>0 jump to destination 2
+			«compile(stmt.body)»				Execute UNITL body
+			«getSource(stmt, uncondDest)»		Unconditional jump to destination 1
+			«getDestination(stmt, condDest)»	Jump destination 2 (conditional)
+		'''
+	}
+	
+	CONTINUE: reuse unconditional jump to 1
+	IF THEN CONTINUE: optimized - *NEW* conditional jump above 1 (2 unconditional jump spared)
+	
+	BREAK: *NEW* unconditional jump after 2
+	IF THEN BREAK: optimized - reuse conditional jump 2 (2 unconditional jump spared)
+
+FOR:	
+
+	def dispatch CharSequence compile(ForStatement stmt) {
+		'''
+			«compile(stmt.init)»				Initialize loop
+			«getDestination(stmt, uncondDest)»	Jump destination 1 (unconditional)
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			If A>0 jump to destination 2
+			«compile(stmt.body)»				Execute FOR body
+			«compile(stmt.end)»					Execute end-of-loop instruction
+			«getSource(stmt, uncondDest)»		Unconditional jump to destination 1
+			«getDestination(stmt, condDest)»	Jump destination 2 (conditional)
+		'''
+	}
+
+
+	CONTINUE: *NEW* unconditional jump before stmt.end. if stmt.end == null, reuse unconditional jump 1.
+	IF THEN CONTINUE: optimized - *NEW* conditional jump before stmt.end (2 unconditional jump spared)
+	
+	BREAK: *NEW* unconditional jump after 2
+	IF THEN BREAK: optimized - reuse conditional jump 2 (2 unconditional jump spared)
+
+WHILE:		
+	
+	def dispatch CharSequence compile(WhileStatement stmt) {
+		'''
+			«getDestination(stmt, condDest)»	Jump destination 1 (conditional)
+			«compile(stmt.body)»				Execute WHILE body
+			«compile(stmt.condition)»			Evaluate condition in A
+			«getSource(stmt, condDest)»			Jump destination 2 (conditional)
+		'''
+	}
+	
+	CONTINUE: *NEW* unconditional jump before stmt.condition
+	IF THEN CONTINUE: optimized - *NEW* conditional jump before stmt.condition (2 unconditional jump spared)
+	
+	BREAK: *NEW* unconditional jump after source 2
+	IF THEN BREAK: optimized - *NEW* conditional jump after source 2 (2 unconditional jump spared)
+		
+In order to implement the above:
+
+	* The maps storing the jumps allocated to each statement now have an "Origin" associated to their keys.
+	This because for a single statement multiple jumps might be allocated, that should be potentially reused.
+	For example, in a UNTIL loop, the code for UNTIL allocates the jumps needed to implement the loop, but a BREAK
+	instruction within the loop, will need a new jump, that must be shared by other BREAK in the same loop.
+	Therefore the jumps are keyed off the statement (the UnitlStatment in this example) and the origin ("BREAK" for 
+	jumps allocated by BreakStatement, "UNTIL" for jumps allocated by UntilStatement).
+	* Code for allocate jumps and compile loops has been changed accordingly. See below some sniplets.
+	
+		[...]
+		def dispatch CharSequence compile(UntilStatement stmt) {
+			'''
+				«IF getDestination(stmt, "CONTINUE", condDest) !== null»
+					«getDestination(stmt, "CONTINUE", condDest)»
+				«ENDIF»
+				«getDestination(stmt, "UNTIL", uncondDest)»
+				«compile(stmt.condition)»
+				«getSource(stmt, "UNTIL", condDest)»
+				«compile(stmt.body)»
+				«getSource(stmt, "UNTIL", uncondDest)»
+				«getDestination(stmt, "UNTIL", condDest)»
+				«IF getDestination(stmt, "BREAK", uncondDest) !== null»
+					«getDestination(stmt, "BREAK", uncondDest)»
+				«ENDIF»
+			'''
+		}
+		[...]
+
+		def dispatch CharSequence compile(ContinueStatement stmt) {
+			val loop = stmt.getContainingLoop
+			if (stmt.isOptimizable) {
+				'''
+					«getSource(loop, "CONTINUE", condDest)»
+				'''
+			} else {
+				switch loop {
+					UntilStatement: '''
+						«getSource(loop, "UNTIL", uncondDest)»
+					'''
+					ForStatement|WhileStatement: '''
+						«getSource(loop, "CONTINUE", uncondDest)»
+					'''
+					default: // guard
+						throw new IllegalArgumentException()
+				}
+			}
+		}
+		[...]
+
+		def private static Statement assignJumps(....
+		[...]
+
+			switch (stmt) {
+				UntilStatement: { // UNTIL needs 2 labels
+					if (!jumps.assignUnconditionalJump(stmt, "UNTIL", uncondDest))
+						return stmt;
+					if (!jumps.assignConditionalJump(stmt, "UNTIL", condDest))
+						return stmt;
+
+					// Allocate labels for instructions in the body
+					tmp = assignJumps(stmt.body, jumps, condDest, uncondDest)
+					if(tmp !== null) return tmp
+				}
+				ContinueStatement: {
+					val loop = stmt.getContainingLoop
+					if (stmt.isOptimizable) {
+						if (!jumps.assignConditionalJump(loop, "CONTINUE", condDest))
+							return stmt;
+					} else {
+						if (!(loop instanceof UntilStatement))
+							if (!jumps.assignUnconditionalJump(loop, "CONTINUE", uncondDest))
+								return stmt;
+					}
+				}
+		[...]
+		
+	
+				
+***** 5: Cleanup
+
+condDest & uncondDest have been moved inside JumpInstructionsAllocator class that now expose methods to allocate and 
+retrieve jumps. The methods have be changed to use JumpType to differentiate between conditional and unconditional jumps.
+		
+	
+				
+***** 5: Placeholders
+
+All of the above does not take in consideration a situation like the below and similar:
+
+	DO
+		DO
+			PRINT;
+		WHILE =A END
+		PRINT;
+	WHILE =A END
+
+Will be compiled as:
+
+	A/V
+	A/W
+	/◇
+	/W
+	/◇
+	/V
+
+Notice that A/V and A/W in practice point to the same location.
+
+To address these cases, when allocating jumps, as described below, only label placeholders are allocated. 
+During code optimization (CodeOptimizer.optimizeJumps()), placeholders that are equivalent are merged together, corresponding jump source instructions changed
+and only after that jump instructions are assigned to placeholders.
+Notice that this means no validation can be performed regarding too many jump instructions required for a code.
+
+
+		
