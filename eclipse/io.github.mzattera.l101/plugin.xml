@@ -7,4 +7,44 @@
 			class = "org.mzattera.dsl.l101.L101Package"
 			genModel = "model/generated/L101.genmodel" />
 	</extension>
+ <extension
+       id="L101"
+       point="org.eclipse.core.runtime.products">
+    <product
+          application="org.eclipse.ui.ide.workbench"
+          name="%productName">
+       <property
+             name="windowImages"
+             value="eclipse16.svg,eclipse32.svg,eclipse48.svg">
+       </property>
+       <property
+             name="aboutText"
+             value="%productBlurb">
+       </property>
+       <property
+             name="aboutImage"
+             value="eclipse_lg.png">
+       </property>
+       <property
+             name="startupForegroundColor"
+             value="ffffff">
+       </property>
+       <property
+             name="startupProgressRect"
+             value="2,290,450,10">
+       </property>
+       <property
+             name="startupMessageRect"
+             value="7,265,320,25">
+       </property>
+       <property
+             name="appName"
+             value="%productName">
+       </property>
+       <property
+             name="preferenceCustomization"
+             value="plugin_customization.ini">
+       </property>
+    </product>
+ </extension>
 </plugin>
