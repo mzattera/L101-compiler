@@ -1,0 +1,86 @@
+/*
+ * Wump101 - based on https://en.wikipedia.org/wiki/Mugwump_(video_game)
+ * 
+ * MAKE SURE DECIMAL WHEEL IS ON 0!
+ * 
+ * Press "V" to start playing.
+ * 
+ * At the beginning, you must enter:
+ * 
+ * 	1. a number to seed the random number generator.
+ * 	   This will determine where the Wump will be at each game; therefore, make sure you enter different seeds each time.
+ * 	2. the maximum number of attempts for each game.
+ * 
+ * After this, the game will randomly place the Wump in one of the 100 available rooms, each identified by its X and Y coordinates (from 0 to 9).
+ * Your task is to find where the Wump is.
+ * 
+ * At each attempt, the number of attempts left is printed (e.g. 10 d).
+ * 
+ * You must enter the position where you think the Wump is; you must enter X and Y coordinates for the room.
+ * 
+ * The game will calculate the distance from the room you entered and the one where the Wump is and will print it
+ * (e.g. 5 A).
+ * 
+ * If you guessed the Wump position (distance = 0) the game ends and you win.
+ * 
+ * If you cannot find the Wump within the given number of attempts, the game ends and you loose.
+ * 
+ * In each case, the Wump coordinates will be printed at the end of the game, e.g.
+ * 
+ * 	3 C
+ * 	5 c
+ *
+ * At any time press "W" to start a new game.
+ * 
+ */
+SHORT rnd IN B; 				// random number 0-99
+SHORT tmp IN B/; 				// temporary store
+SHORT wumpX IN C, wumpY IN C/; 	// coordinates of  the wump (in a 10x10 matrix)
+SHORT ten IN D;  				// constant 10
+SHORT attempt IN D/; 			// number of attempts performed by player in this game
+SHORT maxAttempts IN E/;		// maximum number of attempts
+
+initialize ON V:
+	10 -> ten;
+
+	// initialize random seed generator
+	INPUT -> rnd;
+
+	// initializes maximum number of attempts (the lower the more difficult the game is)
+	INPUT -> maxAttempts;
+	
+
+new_game ON W:
+
+	// randomly place the wump
+	rnd <-> (rnd*21 + 11) % 100; // pseudo-random number generator
+	wumpX <-> rnd / ten;
+	tmp <-> wumpX * ten;
+	wumpY <-> rnd - tmp; 
+
+	// DEBUG
+	// PRINT wumpX, wumpY;
+
+	attempt <-> maxAttempts;
+	
+	DO
+		IF =attempt 
+		THEN
+			PRINT NL, attempt;	
+			attempt <-> A-1;
+		ELSE
+			// too many attempts
+			BREAK; 
+		END
+		 	
+		// read the player's guessed position and calculate how far it is from the Wump
+		// SQRT ( (wumpX-INPUT)^2 +  (wumpY-INPUT)^2) )
+		tmp <-> SQ(wumpX-INPUT);
+		=SQRT( SQ(wumpY-INPUT) + tmp );
+			 
+		PRINT A;
+	WHILE =A END // loop until distance is 0 (player guessed)
+	
+	//  Print Wump position
+	PRINT NL, wumpX, wumpY, NL;
+	

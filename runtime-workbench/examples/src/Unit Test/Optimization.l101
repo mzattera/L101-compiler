@@ -1,0 +1,4 @@
+start ON V:
+	=0.5;
+	PRINT A;
+

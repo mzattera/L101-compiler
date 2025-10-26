@@ -1,0 +1,30 @@
+start ON V:
+
+	GOTO start;
+//	GOTO end;
+//	GOTO end;
+
+	IF =1 THEN GOTO start; ELSE PRINT; END	
+
+	IF =2 THEN GOTO start; END	
+
+//jump1:
+//
+//	GOTO jump1;
+//	GOTO jump2;
+//	GOTO jump1;
+
+//	IF =A THEN
+//		GOTO jump1;
+//	END
+//
+//	IF =A THEN
+//		GOTO jump2;
+//	END
+//	
+jump2:
+
+jumpX:
+
+//keyZ ON Z:
+//end ON W:

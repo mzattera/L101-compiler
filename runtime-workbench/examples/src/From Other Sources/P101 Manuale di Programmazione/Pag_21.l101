@@ -1,0 +1,17 @@
+/*
+ Calcola un'espressione del tipo:
+ 
+   x1
+ ( --- . x3) + x4
+   x2
+
+supponendo che x1 sia in E, x2 in C, x3 in D, x4 in B. Nel caso specifico x1 = 36, x2 = 9, x3 =
+25, x4 = 22. 
+ */
+
+LONG x1 IN E, x2 IN C, x3 IN D, x4 IN B;
+
+start ON V:
+ 	=(x1/x2 * x3)+x4;
+ 	PRINT A;
+ 	

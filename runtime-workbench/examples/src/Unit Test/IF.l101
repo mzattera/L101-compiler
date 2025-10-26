@@ -1,0 +1,42 @@
+ SHORT x IN B, y IN B/;
+
+start ON V:
+	
+	2->x;
+	1->y;
+	
+	IF =(x-y) THEN PRINT x; END
+	PRINT 111;
+	IF =(x-y) ELSE PRINT y; END
+	PRINT 222;
+	IF =(x-y) THEN PRINT x; 
+		ELSE PRINT y;
+	END
+	PRINT 333;
+//	
+//	2->x;
+//	2->y;
+//	
+//	IF =(x-y) THEN PRINT -1; END
+//	PRINT 444;
+//	IF =(x-y) ELSE PRINT -2; END
+//	PRINT 555;
+//	IF =(x-y) THEN PRINT -1; 
+//		ELSE PRINT -2;
+//	END
+//	PRINT 666;
+//
+//	1->x;
+//	2->y;
+//	
+//	IF =(x-y) THEN PRINT x; END
+//	PRINT 777;
+//	IF =(x-y) ELSE PRINT y; END
+//	PRINT 888;
+//	IF =(x-y) THEN PRINT x; 
+//		ELSE PRINT y;
+//	END
+//	PRINT 999;
+//	
+//	PRINT NL,NL,NL,NL;
+//end:

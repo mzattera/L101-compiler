@@ -1,0 +1,227 @@
+grammar org.mzattera.dsl.L101 hidden(WS, ML_COMMENT, SL_COMMENT)
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+generate l101 "http://www.github.io/mzattera/L101"
+
+Program:
+	(varDeclarations+=VariableDeclaration)*
+	body=Statements
+;
+
+VariableDeclaration:
+	(short?='SHORT' | 'LONG') vars+=Variable (',' vars+=Variable)* ';'
+;
+
+// Even though it would be possible to automatically allocate variables, we don't because then variables
+// can be recognized when a register is printed.
+// Constant assignment cannot be done because the program entry point is unknown.
+Variable:
+	name=ID 'IN' reg=('B' | 'B/' | 'C' | 'C/' | 'D' | 'D/' | 'E' | 'E/' | 'F' | 'F/')
+;
+
+// Pay attention this is scoped, therefore if you change feature names you need to change the scope provider.
+VariableAccess returns Expression:
+	{VariableAccess} store=[Variable]
+;
+
+VariableOrUserInput returns Expression:
+	VariableAccess 
+	| UserInput
+;
+
+	/// Expressions ////////////////////////////////////////////////////////////////////
+	/*
+	 * We have 2 options here I think.
+	 * 
+	 * 1) Allow 'A' to appear both as left and right operand with the meaning of "current value in A" and remove the "auto-assignment" operators.
+	 * This will allow more compact syntax but could be error prone because it has side effects:
+	 * A=1   A+A+A =4 (and not 3: (A+A) puts a two in A then +A sums 2+2)
+	 * 
+	 * 2) Current situation: allow A to appear only a) as left operand and b) on the right of "auto-assignment" operators.
+	 * a) removes side effects because, given current syntax, A will appear only once in expressions as the first term to be evaluated
+	 * b) clearly shows when A is changed and again A value is read only once.
+	 * Syntax is less error prone but more complex and less concise though.
+	 */
+AssignmentStatement:
+	// x % y performs x/y then the "exact reminder" (content of R) is moved to A
+	
+	// Compute expression and stores it in A
+	op='=' operand=Expression  													
+	
+	// Computes A = A <op> A/INPUT/Variable/Constant
+	// this allows you to calculate A=A+A as +=A; which is not allowed with "=" statement alone for the above reasons.
+	| op=('+=' | '-=' | '/=' | '*=' | '%=') operand=(VariableOrUserInput | Current | Constant)  	
+	
+	// Computes expression in A then swaps A with given variable
+	| store=VariableAccess op='<->' operand=Expression 							
+;
+
+// TODO 3 - write test code to check expressions (precedence, associativity)
+Expression:
+	AdditiveOperator
+;
+
+AdditiveOperator returns Expression: // left associative
+	MultiplicativeOperator ({AdditiveOperator.left=current} op=('+' | '-') right=(VariableOrUserInput | Constant))*
+;
+
+MultiplicativeOperator returns Expression: // left associative
+	// x % y performs x/y then the "exact reminder" (content of R) is moved to A
+	UnaryOperator ({MultiplicativeOperator.left=current} op=('*' | '/' | '%') right=(VariableOrUserInput | Constant))*
+;
+
+UnaryOperator returns Expression: // right associative
+	{UnaryOperator} op=('SQ' | 'SQRT' | 'INT' | 'DEC' | 'INV' | 'NEG') operand=(UnaryOperator)
+	| Atomic
+;
+
+Atomic returns Expression: 
+	VariableAccess
+	| Current
+	| UserInput
+	| Constant
+	| '(' Expression ')'
+;
+
+Current returns Expression:
+	{Current} 'A'
+;
+
+UserInput returns Expression:
+	{Input} 'INPUT'
+;
+
+Constant returns Expression:
+// Not ideal, as can be space between - and the number,but necessary otherwise i-10 won't be parsed (-10 will be a single indivisible token)
+// Notice it is the same in Java.
+// Notice maximum number of digit in a constant is 11.
+	{Constant} negative?='-'? value=NUMBER
+;
+
+/// Statements ///////////////////////////////////////////////////
+
+Statements:
+		{Statements} (statements+=Statement)*	
+;
+
+Statement:
+	Label
+	| AssignmentStatement ';'
+	| SimpleStatement ';'
+	| SimpleControlStatement ';'
+	| StructuredControlStatement
+;
+	
+Label:
+	name=ID ('ON' target=('V' | 'W' | 'Y' | 'Z'))? ':'
+;
+
+SimpleStatement:
+	StoreStatement 
+	| PrintStatement 
+	| GotoStatement
+;
+
+// Keep these separate from SimpleStatemetns since they have different usage in FOR for example
+SimpleControlStatement:
+	ContinueStatement
+	| BreakStatement
+;
+
+StructuredControlStatement:
+	IfStatement
+	| LoopStatement 
+;
+
+LoopStatement:
+	UntilStatement
+	| ForStatement
+	| WhileStatement 
+;
+
+StoreStatement:
+	param=(Constant | UserInput) '->' store=VariableAccess
+;
+
+// Prints given parameters.
+// Parameters can be a variable: prints its value, "Current": prints content of A, 
+// "NL" to print an empty line, "Constant" prints a number.
+// If no parameters are provided, prints a new line. 
+PrintStatement:
+	{PrintStatement} 'PRINT' (params+=PrintParameter (',' params+=PrintParameter)*)?
+;
+
+PrintParameter:
+	VariableAccess
+	| Current 
+	| Constant
+	| NewLine
+;
+
+NewLine:
+	{NewLine} 'NL'
+;
+
+GotoStatement:
+	'GOTO' label=[Label]
+;
+
+// Code is not really used, it used to point to a feature during validation
+ContinueStatement:
+	{ContinueStatement} code='CONTINUE'
+;
+
+// Code is not really used, it used to point to a feature during validation
+BreakStatement:
+	{BreakStatement} code='BREAK'
+;
+
+// Code is not really used, it used to point to a feature during validation
+IfStatement:
+	code='IF' condition=AssignmentStatement ('THEN' thenClause=Statements)? ('ELSE' elseClause=Statements)? 'END'
+;
+
+// loads condition in A and if false (<=0) executes loop
+UntilStatement:
+	'UNTIL' condition=AssignmentStatement 'DO' body=Statements 'END'
+;
+
+//
+// Equivalent to
+// 
+// init
+// UNTIL condition
+//   body
+//   end
+// END
+ForStatement:
+	'FOR' init=(AssignmentStatement | SimpleStatement)? ';'
+		condition=AssignmentStatement  ';'
+		end=(AssignmentStatement | SimpleStatement)?
+	'DO' body=Statements 'END'
+;
+
+// executes body, then loads condition in A and if true(>0) loops
+WhileStatement:
+	'DO' body=Statements 'WHILE' condition=AssignmentStatement 'END'
+;
+
+terminal ML_COMMENT:
+	'/*'->'*/';
+
+terminal SL_COMMENT:
+	'//' !('\n' | '\r')* ('\r'? '\n')?;
+
+terminal ID:
+	('a'..'z') ('A'..'Z' | 'a'..'z' | '_' | '0'..'9')*;
+
+// TODO 3 - allow leading and trailing 0s; remove them after compilation. IF you do so, add code to validate the number length.
+// TODO 3 - use some thousand separator
+terminal NUMBER:
+	(('1'..'9'('0'..'9')*) |'0') ('.'('0'..'9')*('1'..'9'))?
+;
+
+terminal WS:
+	(' ' | '\t' | '\r' | '\n')+;
+
+	

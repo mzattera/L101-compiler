@@ -1,0 +1,31 @@
+/*
+ * Per illustrare più efficacemente l'utilità della istruzione in esame,
+ * si supponga di avere un tempo espresso in ore e frazione decimale di ora 
+ * (ad esempio 5,31) e di volerlo trasformare in ore, minuti e secondi.
+ * La trasformazione viene programmata tenendo presente che un'ora corrisponde 
+ * a 60 minuti e un minuto a 60 secondi. 
+ */
+ SHORT sixty IN B, time IN C;
+ 
+ start ON V:
+ 	60->sixty;
+ 	INPUT->time;
+ 	
+ 	// Hours
+ 	=INT(time);
+ 	PRINT A;
+ 	
+ 	// Minutes
+ 	time<->DEC(time) * sixty;
+ 	=INT(time);
+ 	PRINT A;
+ 	
+ 	// Seconds
+ 	time<->DEC(time) * sixty;
+ 	=INT(time);
+ 	PRINT A;
+ GOTO start;
+ 	
+ 	
+ 	
+ 	

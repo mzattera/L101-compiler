@@ -1,0 +1,40 @@
+ 
+ /*
+ Per calcolare la media aritmetica di un numero nota di dati, ad esempio 100
+ 
+ a1 + a2 + a3 + . . . . . . + a100
+ ----------------------------------
+                   100 
+ 
+AV Istruzione di destinazione di inizio programma
+ S Impostazione di 100
+C  Memorizzazione di 100
+B * Azzeramento di B, registro in cui si fa l'accumulo
+BV Istruzione di destinazione della sequenza ciclica
+ S Impostazione di ai
+  Trasferimento di ai
+ in A
+B + Accumulo di ai
+B ↕ Memorizzazione dell'accumulo
+C V Istruzione di salto che chiude la sequenza ciclica
+AW Istruzione di destinazione per la sequenza finale
+B Richiamo del totale in A
+C : Divisione del totale per 100
+A Stampa della media
+V Istruzione di salto che chiude il programma 
+*/
+
+LONG counter IN C, result IN B;
+
+start ON V:
+	INPUT -> counter;
+
+loop:
+	result <-> result + INPUT;
+	GOTO loop;
+
+exit ON W:
+	=result / counter;
+	PRINT A;
+
+GOTO start;

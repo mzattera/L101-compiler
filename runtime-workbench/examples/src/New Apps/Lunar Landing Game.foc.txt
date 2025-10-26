@@ -1,0 +1,196 @@
+// Variables
+
+// M=32500;	Current Mass [lbs]
+// N=16500;  	Empty Mass [lbs]
+// M-N 		is always the amount of fuel left [ldb]
+
+// L 			Total elapsed time from beginning of simulation [s]
+// S			The amount of time inside current loop when speed and position are updated (0..T) [s]
+// T=10		Time remaining within current 10s loop [s]
+
+// A=120;		Altitude [miles]
+// V=1;		Speed [miles/s]
+// K 			Fuel burn rate
+// J           New speed after S seconds (subroutine 9)
+// I           New altitude after S seconds (subroutine 9)
+
+// Z=1.8   		CONSTANT used several times
+
+// Q            Only used in subroutine 9	
+// W            calculated in group 8; W*.27777 is the depth of the crater you dig on impact in group 5										
+
+/*
+ * The first, group 1, simply prints out the instructions using the Type statement and sets the initial values for the run.
+ * The mass of fuel is not recorded directly, instead, it uses the current Mass and empty mass, N, 
+ * so the remaining fuel is M-N and the lander runs out of fuel when M-N is 0. 
+ * Also note the Erase at the end of line 1.20, which resets all the variable values.
+ * 
+*/
+
+01.04 T "CONTROL CALLING LUNAR MODULE. MANUAL CONTROL IS NECESSARY"!
+01.06 T "YOU MAY RESET FUEL RATE K EACH 10 SECS TO 0 OR ANY VALUE"!
+01.08 T "BETWEEN 8 & 200 LBS/SEC. YOU'VE 16000 LBS FUEL. ESTIMATED"!
+01.11 T "FREE FALL IMPACT TIME-120 SECS. CAPSULE WEIGHT-32500 LBS"!
+01.20 T "FIRST RADAR CHECK COMING UP"!!!;
+      E
+01.30 T "COMMENCE LANDING PROCEDURE"!
+        "TIME,SECS   ALTITUDE,MILES+FEET"
+01.40 T "VELOCITY,MPH   FUEL,LBS   FUEL RATE"!
+01.50 S A=120;
+      S V=1;
+      S M=32500;  
+      S N=16500;  
+      S G=.001;
+      S Z=1.8   
+
+
+/******************************************************************************************* 
+ *
+ * As the code "falls" through group 1 into group 2 during the first run, 
+ * the initial values are printed out in the first two lines. 
+ */
+ 
+02.10 T "    ",  %3,  L,  "       ",  FITR(A),  "  ",  %4,  5280*(A-FITR(A))
+02.20 T %6.02,  "       ",  3600*V,  "    ",  %6.01,  M-N,  "      K=";
+      A K;
+      S T=10
+
+/*
+ * Ask user for the burn rate: loop until ((k<=200) && ((k>=8) || (k=0)))
+ */
+
+02.70 T %7.02;
+      I (200-K) 2.72;	// if (K > 200) goto 2.72
+      I (8-K) 3.1, 3.1;	// if (K >= 8) goto 3.10
+      I (K) 2.72, 3.1   // if (K < 0) goto 2.72 else if (K=0) goto 3.10
+
+02.72 T "NOT POSSIBLE"; F X=1,51 ;T "."
+02.73 T "K=";
+      A K;
+      G 2.7
+
+/******************************************************************************************* 
+ * Group 3 first tests to see if the fuel has run out, and jumps to group 4 if it has.
+ * Then it tests if the 10-second period in T has expired and, if so, loops back to print everything out again, 
+ * which has the side-effect of resetting T to 10.
+ */
+  
+03.10 I (M-N-.001) 4.1;		// if (remaining fuel < 0.001) goto 4.1
+      I (T-.001) 2.1;		// if (T < 0.001) goto 2.1
+      S S=T
+
+/*
+ * Line 3.40 tests to see if the amount of fuel burned this period, S*K, will reduce the mass of the vehicle as a whole, 
+ * S*K-M, beyond the empty weight, N. If not, it moves on, if it will, it instead sets the loop timer to the amount of 
+ * time the remaining fuel will burn, thus ending the loop early.
+ */
+
+03.40 I ((N+S*K)-M) 3.5, 3.5;	// if (S*K <= M-N) goto 3.5 -> fuel can burn at this rate for S seconds
+      S S=(M-N)/K				// else S=(M-N)/K		    -> fuel can burn for fuel/K seconds
+
+/*
+ * In either case, it calls group 9 to update the velocity and position. It then loops over groups 7, 8 and 9 until 
+ * the value of I converges.
+ * When the 10-second timer runs out, or it reaches the end due to the fuel test in line 3.10 or the altitude test in 7.10.
+ * In the latter cases, it will jump to group 4 and fall through to group 5, or jump to group 5 directly.
+ * Group 5 types the end-of-game results and then asks the user if they'd like to try again.
+ * If so, it jumps to 1.20 to clear out all values and print the headers again, if not if falls through to 5.98 and Quits.
+ */
+ 
+03.50 D 9;				// Calculate new speed and altitude after S seconds
+      I (I) 7.1, 7.1;	// if (I <= 0) goto 7.1 		-> new position of lander is negative
+      I (V) 3.8, 3.8;   // if (V <= 0) goto 3.8 		-> lander is going up, update data
+      I (J) 8.1			// else if (J < 0) goto 8.1     -> lander was going down, but new direction is up
+
+/*
+ * Update speed and position and the different timings, then loop.
+ */
+03.80 D 6;				
+      G 3.1
+
+/******************************************************************************************* 
+ * Fuel out!
+ * Calculates the time of impact in free fall.
+ */
+
+04.10 T "FUEL OUT AT", L, " SECS"!
+04.40 S S = (FSQT(V*V+2*A*G)-V)/G;
+      S V = V + G*S;
+      S L = L+S
+
+/******************************************************************************************* 
+ * The lander touches ground.
+ * Prints effects of the impact.
+ */
+ 
+05.10 T "ON THE MOON AT", L, " SECS"!;
+      S W=3600*V
+05.20 T "IMPACT VELOCITY OF", W, "M.P.H."!, "FUEL LEFT:" M-N, " LBS"!
+05.40 I (1-W) 5.5, 5.5:
+      T "PERFECT LANDING !-(LUCKY)"!;
+      G 5.9
+05.50 I (10-W) 5.6, 5.6;
+      T "GOOD LANDING-(COULD BE BETTER)"!;
+      G 5.9
+05.60 I (22-W) 5.7, 5.7;
+      T "CONGRATULATIONS ON A POOR LANDING"!;
+      G 5.9
+05.70 I (40-W) 5.81, 5.81;
+      T "CRAFT DAMAGE. GOOD LUCK"!;
+      G 5.9
+05.81 I (60-W) 5.82, 5.82;
+      T "CRASH LANDING-YOU'VE 5 HRS OXYGEN"!;
+      G 5.9
+05.82 T "SORRY,BUT THERE WERE NO SURVIVORS-YOU BLEW IT!"!"IN "
+05.83 T "FACT YOU BLASTED A NEW LUNAR CRATER", W*.277777, " FT.DEEP.
+05.90 T !!!!"TRY AGAIN?"!
+05.92 A "(ANS. YES OR NO)" P;
+      I (P-0NO) 5.94, 5.98
+05.94 I (P-0YES) 5.92, 1.2, 5.92 
+05.98 T "CONTROL OUT"!!!;
+      Q
+
+/******************************************************************************************* 
+ * Subroutine.
+ * Updates elapsed times, fuel, position and speed
+ */
+ 
+06.10 S L=L+S;
+      S T=T-S;
+      S M=M-S*K;
+      S A=I;
+      S V=J
+
+/******************************************************************************************* 
+ * This is called if new calculated position of the lander is <= 0.
+ * Updates S (= time of impact?) then calls 9 and 6 looping until S < 0.005
+ */
+ 
+07.10 I (S-.005) 5.1;								// if (S < 0.005) print impact result
+      S S = 2*A / (V + FSQT(V*V+2*A*(G-Z*K/M)))
+07.30 D 9;
+      D 6;
+      G 7.1
+
+/******************************************************************************************* 
+ * This is called when the lander is going down, but the new calculated speed points up.
+ * This could indicate that the lander goes down before going up, I think the below checks 
+ * whether going down it hits the ground.
+ */
+ 
+08.10 S W = (1 - M*G/(Z*K) ) /2;
+      S S = M*V / (Z*K* (W + FSQT(W*W+V/Z))) + .05;
+      D 9
+08.30 I (I) 7.1, 7.1;			// if (I <= 0) goto 7.1 -> lander position negative
+      D 6;					
+      I (-J) 3.1, 3.1;			// if (J >= 0) goto 3.1 -> lander speed update was positive (down), return to main loop
+      I (V) 3.1, 3.1, 8.1		// if (V <= 0) goto 3.1 else goto 8.1 -> loops until update velocity is positive.
+
+/******************************************************************************************* 
+ * Subroutine.
+ * Computes new speed and altitude after S seconds.
+ */
+ 
+09.10 S Q = S*K/M;										
+      S J = V + G*S + Z*(-Q-Q^2/2-Q^3/3-Q^4/4-Q^5/5)					// New speed
+09.40 S I = A - G*S*S/2 - V*S + Z*S*(Q/2+Q^2/6+Q^3/12+Q^4/20+Q^5/30)  	// New altitude

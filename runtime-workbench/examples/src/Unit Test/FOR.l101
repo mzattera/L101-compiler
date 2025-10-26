@@ -1,0 +1,48 @@
+ SHORT i IN B;
+//
+//FOR 1->i; =(i-3); i<->i+1 DO
+//	PRINT i;
+//END
+//
+//FOR ; =(i-3); i<->i+1 DO
+//	PRINT i;
+//END
+//
+//FOR 1->i; =(i-3);  DO
+//	PRINT i;
+//END
+//
+//FOR ; =(i-3);  DO
+//	PRINT i;
+//END
+
+//FOR 1->i; =(i-3); i<->i+1 DO
+//	PRINT;
+//	CONTINUE;
+//	PRINT;
+//END
+//
+//FOR 1->i; =(i-3); DO
+//	PRINT;
+//	CONTINUE;
+//	PRINT;
+//END
+//
+//FOR 1->i; =(i-3); DO
+//	PRINT;
+//	BREAK;
+//	PRINT;
+//END
+
+FOR 1->i; =(i-3); i<->i+1 DO
+	PRINT;
+	IF =i THEN CONTINUE; END
+	PRINT;
+END
+
+FOR 1->i; =(i-3); DO
+	PRINT;
+	IF =i THEN BREAK; END
+	PRINT;
+END
+	

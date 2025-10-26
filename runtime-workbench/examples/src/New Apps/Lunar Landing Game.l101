@@ -1,0 +1,90 @@
+/**
+ * This is altitude re-make of the classic Lunar Landing Game by Jim Storer
+ * 
+ * 		https://www.cs.brandeis.edu/~storer/LunarLander/LunarLander.html).
+ * 
+ * The game has been ported from the original FOCAL code
+ * 
+ * 		https://en.wikipedia.org/wiki/FOCAL_(programming_language)#Example_code
+ * 
+ * A commented version of the FOCAL code can be found in the same folder of this file (Lunar Landing Game.foc.txt).
+ * 
+ * Compared to the original, the code has to be simplified to fit in memory:
+ *   Variable S is not used, and all calculations are done assuming S=10 (simulation time tick = 10 s)
+ *   When entering burn rate it must be multiplied by 10 (K*S)
+ *   Checks are only done to assure no more fuel than that available is entered.
+ *   No detailed speed and velocity recalculations are done when the lander touches ground or when it goes up and down (routines 7.0 and 8.0 in FOCAL).
+ *   Speed and altitude are only an approximation of the original FOCAL formulas.
+ * 
+ * ====== HOW TO PLAY ==========================================================================
+ * 
+ * Put digit wheel on 5.
+ * 
+ * Press "V" key to start the game.
+ * 
+ * P101 will print Altitude, Speed (>0 if going down) and remaining fuel.
+ * 
+ * Enter altitude number 80-2000 indicating how much fuel to burn during the next 10 seconds
+ * (this is 10 times the burn rate you need to enter in the original FOCAL code).
+ * The more fuel you burn the more the lander is pushed up in the sky.
+ * 
+ * P101 calculates new speed ad altitude and asks again for the amount of fuel to burn until:
+ * 
+ * 	altitude) you run out of fuel; in this case simulation continues in 10 seconds steps without the need for you to enter anything.
+ *  b) the lander touches the ground (altitude < 0); the gme stops at this point.
+ *     If last speed that was printed is < 22, you have successfully landed :) (in any other case you are unfortunately dead).
+ * 
+ * Press "V" key to restart the game. 
+ */
+ 
+SHORT altitude IN B;	// Altitude [miles]
+SHORT speed IN B/;		// Speed [miles/s]
+SHORT fuel IN C;  		// Fuel [lbs] (original FOCAL code uses M-N, but this saves memory)
+SHORT k_q IN C/;		// In order to save memory this is used both as variable K (fuel burn rate * S) and Q (only used in subroutine 9) in the FOCAL code
+
+start ON V:
+
+	120 -> altitude;
+	1 -> speed;
+	16000 -> fuel;
+ 
+main_loop:
+	=speed*3600; 		// speed in miles
+	PRINT altitude, A, fuel;
+		
+	IF =NEG(altitude) THEN GOTO landing; END // altitude < 0 -> you touch the ground
+
+	IF =fuel 
+	THEN 
+		INPUT -> k_q;			// instead of using K*S our code assumes user enters K*10 and we do all calculations as if S=10 this to save space
+		IF =(fuel-k_q)  		// if (K*S >= fuel) then the fuel is not enough, reduce it
+			ELSE k_q <-> fuel;
+		END
+	ELSE
+		0 -> k_q;				// no fuel left, don't ask any input
+		PRINT NL; 
+	END
+
+	fuel <-> fuel-k_q; 				
+		
+	//Original FOCAL formulas
+	
+	// 09.10 S Q = S*K/M;										
+	//       S J = V + G*S + Z*(-Q-Q^2/2-Q^3/3-Q^4/4-Q^5/5)					// New speed
+	// 09.40 S I = A - G*S*S/2 - V*S + Z*S*(Q/2+Q^2/6+Q^3/12+Q^4/20+Q^5/30)	// New altitude
+
+	k_q <-> INV(fuel+k_q+16500) * k_q;				//	Q = S*K/M  -> S*K / (F+16500) -> notice that we already did F=F-K, so we need to add K again	
+	
+	altitude <-> 9 * k_q - 0.05 +altitude;			// Z*S*(Q/2) - G*S*S/2 + A		
+	altitude <-> NEG(speed) * 10 +altitude;			// -V*S + altitude
+	altitude <-> SQ(k_q) * 3 +altitude;				// Z*S*(Q^2/6) +altitude
+	// altitude <-> SQ(k_q)*k_q * 1.5 +altitude;	// Z*S*(Q^3/12) +altitude
+	
+	speed <-> k_q * -1.8 + 0.01 +speed;		// Z*(-Q) + G*S + V
+	speed <-> SQ(k_q) * -0.9 +speed;		// Z*(-Q^2/2) +speed
+	speed <-> SQ(k_q)*k_q * -0.6 +speed;	// Z*(-Q^3/3) +speed
+
+GOTO main_loop;
+ 
+landing:	
+	// you landed, program ends

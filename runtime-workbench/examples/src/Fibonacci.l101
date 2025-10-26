@@ -1,0 +1,21 @@
+/*
+ * Print Fibonacci serie of numbers. 
+ */
+ 
+LONG one IN B, two IN C, fib IN D;
+
+start ON V:
+
+	// These will record last 2 numbers in the sequence
+	1->one;
+	1->two;
+	
+	PRINT one, two;
+	
+loop: // calculate next number in the sequence
+	fib<->one+two;
+	PRINT fib;
+	
+	one<->two;
+	two<->fib;
+GOTO loop;

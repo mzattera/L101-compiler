@@ -1,0 +1,45 @@
+/*
+ Per calcolare la media aritmetica di un numero nota di dati, ad esempio 100
+ 
+ a1 + a2 + a3 + . . . . . . + a100
+ ----------------------------------
+                   100 
+ 
+ A V Istruzione di destinazione iniziale
+ S Impostazione di 1
+ D  Memorizzazione di 1 in D
+ S Impostazione di 100
+ C  Memorizzazione di 100 in C
+ B * Azzeramento di B, ove si forma l'accumulo
+ C /* Azzeramento di c, ove si forma il contatore
+B / V Destinazione del salto condizionato
+ S Impostazione di ai
+  Trasferimento di a i in A
+B + Accumulo di a i sul totale precedente
+B ↕ Memorizzazione dell'accumulo
+D  Richiamo di 1 in A
+C/ + Valore del contatore + 1
+C /↕ Accantonamento del nuovo valore
+C  Richiamo di 100 in A
+C / - 100 - valore del contatore
+C / V Origine di salto condizionato: il salto si realizza se il risultato della
+ sottrazione è positivo
+B  Richiamo del totale
+C : Divisione del totale per 100
+A  Stampa della media
+V Istruzione di salto incondizionato che chiude il programma 
+ */
+SHORT end IN C, result IN B, counter IN C/; 
+ 
+start ON V:
+	INPUT -> end;	// how many numbers to read
+	
+	FOR 1->counter; =end-counter; counter<->counter+1 DO // accumulates all inputs in result
+		result <-> result + INPUT;
+	END // repeat if counter < end
+	
+	// calculate and print average
+	=result / end; 
+	PRINT A;
+	
+GOTO start;

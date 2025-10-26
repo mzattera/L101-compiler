@@ -1,0 +1,30 @@
+SHORT x IN B;
+
+//DO
+//	PRINT;
+//WHILE =x END
+//
+//DO
+//	PRINT;
+//	CONTINUE;
+//	PRINT;
+//WHILE =x END
+//
+//DO
+//	PRINT;
+//	BREAK;
+//	PRINT;
+//WHILE =x END
+
+DO
+	PRINT;
+	IF =x THEN CONTINUE; END
+	PRINT;
+WHILE =x END
+
+DO
+	PRINT;
+	IF =x THEN BREAK; END
+	PRINT;
+WHILE =x END
+
