@@ -29,7 +29,7 @@ Unfortunately, currently you can only launch the project from within Eclipse (if
 
 You need Xtext 24.0 Eclipse plugin and Java 21 installed to run the project.
 
-The ``eclipse`` folder is an Eclipse workbench with the entire project. Launch the application as an "Eclipse Application", create a Java project in the application workbench (you will be prompted to turn it into an Xtext project, say yes) and create a .l101 file; it will be automatically compiled when you save it or when you clean the project (this is a good way to recompile all examples).
+The ``eclipse`` folder is an Eclipse workbench with the entire project. Launch the application as an "Eclipse Application", create a Java project in the application workbench (you will be prompted to turn it into an Xtext project, say yes) and create a ``.l101`` file; it will be automatically compiled when you save it or when you clean the project (this is also a good way to recompile all examples).
 
 The ``runtime-workbench`` folder contains an example workbench with many examples.
 
@@ -42,14 +42,14 @@ Currently, this application generates:
                 
   2. ``.666``  files: these are files for the [P101Emul emulator](http://www.claudiolarini.altervista.org/emul2.htm).
   
-    **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
-	The emulator needs the card to be renamed as "P101CARD.nnn" where "nnn" is a 3-digit number 000-999 and put in the folder "SCHEDE".
-	Then under "Controllo" menu, click "Usa scheda magn." and enter the card number in the pop-up keypad to load it.
-	Use "GEN RESET" button when you start the emulator and any time the machine get jammed (red indicator) to reset the emulated P101.
+	  **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
+	  The emulator needs the card to be renamed as "P101CARD.nnn" where "nnn" is a 3-digit number 000-999 and put in the folder "SCHEDE".
+	  Then under "Controllo" menu, click "Usa scheda magn." and enter the card number in the pop-up keypad to load it.
+	  Use "GEN RESET" button when you start the emulator and any time the machine get jammed (red indicator) to reset the emulated P101.
 
-    Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
-    Windows 10 (sometimes one single keystroke on the emulated P101 keyboard generates multiple strokes in the emulator,
-    which might cause issues when running a program); beside this, programs appear to run fine in this emulator.
+      Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
+      Windows 10 (sometimes one single keystroke on the emulated P101 keyboard generates multiple strokes in the emulator,
+      which might cause issues when running a program); beside this, programs appear to run fine in this emulator.
 
   3. ``.pmc``  files: these are card files for the [P101JavaPlus emulator](http://www.museotecnologicamente.it/collezione/programma-101/).
     The files seem to load correctly in the emulator using "Card Choice" button but I encountered issues running them.
@@ -63,7 +63,6 @@ Due to P101 limitations, L101 is a very simple language, between BASIC and assem
 All language keywords are case-sensitive and uppercase. Notice some keywords are single-letters (e.g. ``E``, ``Y``, etc).
 All identifiers (variable names and labels) must start with a lowercase letter, followed by zero or more upper- or lower-case letters, numbers or underscore.
 
-Any L101 program starts with variable declarations followed by program statements.
 
 ### Comments
 
@@ -78,7 +77,9 @@ comment.
 
 ### Variables
 
-P101 has 5 numeric registries (B, C, D, E, F) that can be used to store data, each one can be used either as a 22 digits register (including sign and comma separator) or treated as two 11 digits registers.
+All L101 programs start with variable declarations, followed by program statements.
+
+P101 has 5 numeric registries (B, C, D, E, F) that can be used to store data. Each one can be used either as a 22 digits register (including sign and comma separator) or treated as two 11 digits registers.
 
 L101 allows you to declare variables that will be placed in these registers using ``LONG..IN`` (for using the full register) and ``SHORT..IN`` (for using half register) keywords.
 
@@ -88,15 +89,12 @@ Notice how each line ends with a ``;``.
 // Allocates a 22 digits variable e and places it in the E register.
 LONG e IN E;
 
-// Allocates variables x and y and put them in the F register.
+// Allocates variables x and y and puts them in the F register.
 // These are 11 digit variables, y will be in "left" part of the register.
 SHORT x IN F, y IN F/;
 ```
 
-Registers F, E, and D in this order are also used to store code, allowing for longer programs, if they are not used for variables; when split, right part is used for code earlier then left part.
-Therefore, it is advised you allocate B and C first, then "left" part of F, then its "right" part, and so on for E and D.
-
-The "accumulator" register A can be accessed with keyword ``A``.
+The P101 "accumulator" register A can be accessed with keyword ``A``.
 
 
 ### Expressions
@@ -124,9 +122,12 @@ Unary operators operate on a single expression.
   * ``ABS`` takes absolute value for the expression.
   * ``NEG`` negates one expression (= -expression).
   * ``INT`` takes integer part of an expression (everything left of the decimal separator).
+    This uses the undocumented P101 instruction ``/↑``.
+	
   * ``DEC`` takes decimal part of an expression (everything right of the decimal separator).
     
-	**Note:** I could not find in any P101 manual a clear description of how this works for negative numbers. 
+	**Note:** This uses the P101 instruction ``/↕``;
+	I could not find in any P101 manual a clear description of how this works for negative numbers. 
 	In the P203 manual the same instruction is supposed to preserve sign (so DEC(-1.2)=-0.2).
 	However, P101Emul emulator always makes this positive.
 	
@@ -163,7 +164,7 @@ will put the value 3 in A.
 
 L101 also has compound assignment operators, they always target the A register:
 
-(``+=`` | ``-=`` | ``/=`` | ``*=`` | ``%=``) (_variable_ | ``INPUT`` | `A` | _constant_) ``;``
+(``+=`` | ``-=`` | ``/=`` | ``*=`` | ``%=``) (_variable_ | _constant_ | ``A`` | ``INPUT``) ``;``
 
 Similarly to other programming languages, ``+=5`` performs A=A+5 (which is equivalent to L101 code ``=A+5``).
 Notice that the argument cannot be any expression; it must be a variable, a constant, the accumulator value or ``INPUT`` indicating the machine must stop and wait for user input.
@@ -253,10 +254,10 @@ In L101, the IF statement has the following structure:
 
 ``IF`` _assigment_ ``THEN`` _then_statements_ ``ELSE`` _else_statements_ ``END``
 
-_assignment_ is a simple (``=``) or compound assignment (e.g. ``+=``) that is executed first;
-if after the assignment A>0 (=true), then _then_statements_ are executed, otherwise (if A <= 0) _else_statements_ are executed.
+_assignment_ is a simple (``=``), compound (e.g. ``+=``) or swap (``<->``) assignment that is executed first;
+if after the assignment A>0 (=true), then _then_statements_ are executed, otherwise (if A<=0) _else_statements_ are executed instead.
 
-Either ``THEN`` or ``ELSE`` might be omitted.
+Either ``THEN`` or ``ELSE`` can be omitted.
 
 Below code print numbers 4..3..2..1..42
 
@@ -319,7 +320,7 @@ UNTIL <assignment>
 END
 ```
 
-_initialisation_ and _loop_end_can be an assignment or a simple statement like ``GOTO`` or ``PRINT``.
+_initialisation_ and _loop_end_ can be an assignment or a simple statement like ``GOTO`` or ``PRINT``.
 
 **Note** that the loop is executed if _assigment_ resulted in A<=0 (=false); this is the **opposite** for example of FOR loops in C or Java.
 
@@ -340,13 +341,17 @@ Like in many other languages, ``BREAK`` can be used to jump out of current loop 
 
 ## Trip and Tricks
 
-Because of P101 limitations, you need to write L101 code in the most efficient ways, this means you need to be aware of some details about how L101 works "under the hood".
+Because of P101 limitations, you need to write L101 code in the most efficient way, this means you need to be aware of some details about how L101 works "under the hood".
 
 
 ### Constants and Variables
 
 Storing constants in code takes up a lot of code space, so typically P101 code requires user to manually enter them instead.
-Also, if you use a constant value over and over (e.g. in different formulas), it is better to have it stored in a variable, instead of explicit it in code. 
+Also, if you use a constant value over and over (e.g. in different formulas), it is better to have it stored in a variable, instead of writing it in code each time. 
+
+P101 registers F, E, and D (in this order) are also used to store code if they are not used for variables; when split, right part of each register is used for code earlier then left part.
+Therefore, it is advised you allocate variables in B and C first, then allocate "left" part of F followed by its "right" part, and so on for E and D.
+
  
 ### Expressions
 
@@ -379,7 +384,8 @@ Because the compiler cannot be sure about the value of A, these optimizations ar
 
 P101 has a fixed number of jump locations it can use for unconditional (e.g. ``GOTO``) or conditional (e.g. ``IF..THEN..ELSE``) jumps.
 
-The L101 tries to optimize the usage of labels but there are some approaches you can use to reduce number of labels used by the compiler.
+The L101 compiler tries to optimize the usage of labels but there are some approaches you can use to reduce the number of labels your program requires.
+
 When  _statements_ is **not** a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
 
 ```
@@ -416,7 +422,7 @@ IF =x ELSE PRINT A; END
 	A/V
 ```	
 	
-### Automatic Optimisation
+### Automatic Optimization
 
 L101 compiler performs some optimizations automatically.
 
@@ -434,7 +440,7 @@ D/S
 ↓
 ```
 	
-Similarly, ``NEG(y)``, where y is a single variable is optimized as P101 code:
+Similarly, ``NEG(y)``, where y is a single variable, is optimized as P101 code:
 
 ```
 A-
