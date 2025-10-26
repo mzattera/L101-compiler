@@ -1,11 +1,20 @@
 # L101-compiler
 
-This is a BASIC-like language compiler for the Olivetti Programma P101 (P101).
+This is a BASIC-like language compiler for the [Olivetti Programma P101](https://en.wikipedia.org/wiki/Programma_101) (P101).
 
 I created this a couple of years ago, mostly to learn Xtext.
 
 I have decided to release this in the public now, in occasion of the 60th anniversary of Programma 101.
 
+Using this compiler I have created two *new games* for the P101:
+
+  * *Wump101* ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Wump101.P101))
+    is a remake of [Mugwump](https://en.wikipedia.org/wiki/Mugwump_(video_game)).
+	Check the [L101 source](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src/New%20Apps/Wump101.l101) for instructions how to play the game.
+	
+  * *Lunar Landing Game* ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Lunar%20Landing%20Game.P101))
+    is a remake of a game originally written in the FOCAL programming language by Jim Storer in 1969 for PDP-8. This is completed but still being tested (necessary approximations might impact gameplay).
+	Check the [L101 source](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src/New%20Apps/Wump101.l101) for details.
 
 ## Coding on the  P101
 
@@ -30,13 +39,13 @@ Currently, this application generates:
   1. ``.P101`` files: these are UTF-8 files containing the listing of the compiled P101 program.
                 
   2. ``.666``  files: these are files for the [P101Emul emulator](http://www.claudiolarini.altervista.org/emul2.htm).
-
-  **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
+  
+    **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
 	The emulator needs the card to be renamed as "P101CARD.nnn" where "nnn" is a 3-digit number 000-999 and put in the folder "SCHEDE".
 	Then under "Controllo" menu, click "Usa scheda magn." and enter the card number in the pop-up keypad to load it.
 	Use "GEN RESET" button when you start the emulator and any time the machine get jammed (red indicator) to reset the emulated P101.
 
-  Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
+    Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
     Windows 10 (sometimes one single keystroke on the emulated P101 keyboard generates multiple strokes in the emulator,
     which might cause issues when running a program); beside this, programs appear to run fine in this emulator.
 
@@ -49,7 +58,8 @@ Currently, this application generates:
 
 Due to P101 limitations, L101 is a very simple language, between BASIC and assembler.
 
-All language keywords are case-sensitive. Notice some keywords are single-letters (e.g. ``E``, ``Y``, etc).
+All language keywords are case-sensitive and uppercase. Notice some keywords are single-letters (e.g. ``E``, ``Y``, etc).
+All identifiers (variable names and labels) must start with a lowercase letter, followed by zero or more upper- or lower-case letters, numbers or underscore.
 
 Any L101 program starts with variable declarations followed by program statements.
 
@@ -96,8 +106,7 @@ The most basic expressions are:
   * ``INPUT`` which instructs P101 to stop and ask for an input value, which will be used as the expression value.
   
   * Numeric constants (numbers with no leading zeros, with an optional decimal separator and minus sign, e.g. 1, 2.0, -3.14).
-    Notice storing constants takes up a lot of code space, so typically P101 code requires user to manually enter them instead.  
-	
+    	
   * A variable name.
   
 More complex expressions can be created by using brackets and the below operators.
@@ -161,6 +170,9 @@ _variable_ ``<->`` _expression_ ``;``
 
 will calculate the value of _expression_ and store it into _variable_. In addition, current value of _variable_ will be transferred into A register.
 
+
+#### Store
+
 Finally, you can store a constant value or the user input into a variable like this:
 
 (_constant_ | ``INPUT``) ``->`` _variable_ ``;``
@@ -208,11 +220,11 @@ L101 allows unconditional jumps by using the ``GOTO`` statement:
 
 ``GOTO`` _label_ ``;``
 
-Will cause execution to jump to the position in the code indicated by _label_. To define a label you simple enter its name followed by column:
+will cause execution to jump to the position in the code indicated by _label_. To define a label you simple enter its name followed by column:
 
 _label_ ``:``
 
-The P101 has 4 keys labeled "V"-"Z" that, when pressed, will cause the P101 to execute code from a given position (this is the standard way to start a program stored in memory.
+The P101 has 4 keys labeled "V"-"Z" that, when pressed, will cause the P101 to execute code from a given position (this is the standard way to start a program stored in memory).
 Labels can be associated with these key like this:
 
 _label_  ``ON``  (``V`` | ``W`` | ``Y`` | ``Z``) ``:``
@@ -225,7 +237,7 @@ SHORT x IN B/;
 start ON V: 	// When user presses "V" key, execution starts from this point
 	
 	INPUT ->x; 	// Reads user input and stores it in x
-	=SQ(x);		// A = X squared
+	=SQ(x);		// A = x squared
 	PRINT A;	// Prints result
 	
 	GOTO start;	// Next number
@@ -240,7 +252,7 @@ In L101, the IF statement has the following structure:
 ``IF`` _assigment_ ``THEN`` _then_statements_ ``ELSE`` _else_statements_ ``END``
 
 _assignment_ is a simple (``=``) or compound assignment (e.g. ``+=``) that is executed first;
-if after the assignment A > 0, then _then_statements_ are executed, otherwise (if A <= 0) _else_statements_ are executed.
+if after the assignment A>0 (=true), then _then_statements_ are executed, otherwise (if A <= 0) _else_statements_ are executed.
 
 Either ``THEN`` or ``ELSE`` might be omitted.
 
@@ -260,3 +272,183 @@ loop:
 	END
 ```
 
+#### Loops
+
+``UNTIL`` _assignment_ ``DO`` _statements_ ``END``
+
+Similarly to other languages, the ``UNITL`` loop executes the _assigment_ then, if A<=0 (=false) executes _statements_ repeating the loop until the _assignment_ puts a value >0 in A.
+
+```
+// Prints numbers -3..-2..0
+
+start ON V:
+
+	= -3;			// A = -3	
+	UNTIL =A DO		// If A <= 0 then do...
+		PRINT A;
+		+= 1;		// A = A+1
+	END
+```
+
+``DO`` _statements_ ``WHILE`` _assignment_ ``END``
+
+``DO..WHILE`` statement executes _statements_, then executes the _assigment_ and loops if A>0 (=true).
+
+```
+// Prints numbers 3..2..1
+
+start ON V:
+
+	=3;			// A = 3	
+	DO		
+		PRINT A;
+	WHILE -= 1 END	// A = A-1, then if A > 0 loop
+```	
+
+``FOR`` _initialisation_ ``;`` _assignment_ ``;`` _loop_end_ ``DO`` _statements_ ``END``
+
+``FOR`` loop is a concise way of writing:
+
+```
+<initialisation>
+UNTIL <assignment>
+	<statements>
+	<loop_end>
+END
+```
+
+_initialisation_ and _loop_end_can be an assignment or a simple statement like ``GOTO`` or ``PRINT``.
+
+**Note** that the loop is executed if _assigment_ resulted in A<=0 (=false); this is the **opposite** for example of FOR loops in C or Java.
+
+```
+// Prints squares of numbers from 1 to 5.
+
+SHORT i IN B/;
+
+start ON V:
+	FOR 1->i; =i-5; i<->i+1 DO // i=1, if i-5<=0 (-> i<=5) do the loop...  
+		=SQ(i);
+		PRINT A;				// print x squared, i<->i+1 is executed before END
+	END 
+```	
+
+Like in many other languages, ``BREAK`` can be used to jump out of current loop instruction, while ``CONTINUE`` will go to the end of the loop.
+
+
+## Trip and Tricks
+
+Because of P101 limitations, you need to write L101 code in the most efficient ways, this means you need to be aware of some details about how L101 works "under the hood".
+
+
+### Constants and Variables
+
+Storing constants in code takes up a lot of code space, so typically P101 code requires user to manually enter them instead.
+Also, if you use a constant value over and over (e.g. in different formulas), it is better to have it stored in a variable, instead of explicit it in code. 
+ 
+### Expressions
+
+If A is not 0, the instruction ``=1;`` which would be compiled as 3 P101 instructions:
+	
+```			
+A/↑
+D/↓
+↓
+```
+
+is better written as `/=A;` (A = A/A) which compiles as a single P101 instruction.
+
+```
+A÷
+```
+
+Similarly, to have the value 2 stored in A, if A is not 0 use below L101 code:
+
+```
+/=A;
++=A;
+```
+	
+Because the compiler cannot be sure about the value of A, these optimizations are not done automatically.
+
+
+
+### Labels, Jumps, and Loops
+
+P101 has a fixed number of jump locations it can use for unconditional (e.g. ``GOTO``) or conditional (e.g. ``IF..THEN..ELSE``) jumps.
+
+The L101 tries to optimize the usage of labels but there are some approaches you can use to reduce number of labels used by the compiler.
+When  _statements_ is *not* a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
+
+```
+IF _assignment_ THEN
+	_statements_
+END
+```
+
+allocates one jump more, needs one instruction more and is slower than writing:
+
+```
+IF _NOT_assignment_ ELSE
+	_statements_
+END
+```
+
+Below an example of how two statements are compiled:
+
+```
+IF =x THEN PRINT A; END
+
+	D↓
+	/V	   if D>0 goto A/V 	-> Notice nothing is printed if D=0
+	CV     else goto BV
+	A/V
+	A◇     print A
+	BV
+
+IF =x ELSE PRINT A; END
+
+	D↓
+	/V     if D>0 goto A/V 	-> Notice prints 0 if D=0
+	A◇     print A
+	A/V
+```	
+	
+### Automatic Optimisation
+
+L101 compiler performs some optimizations automatically.
+
+L101 code ``=0``  is automatically optimized as P101 code:
+
+```
+A- 
+```
+
+instead of:
+	
+```	
+A/↑
+D/S
+↓
+```
+	
+Similarly, ``NEG(y)``, where y is a single variable is optimized as P101 code:
+
+```
+A-
+y-
+```
+
+Fianlly, L101 xode ``=A*2`` or ``*=2`` is automatically optimized as P101 code:
+
+```
+A+ 
+```
+
+instead of:
+
+```
+A/↑
+D/↑
+x
+```

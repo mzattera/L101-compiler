@@ -1,13 +1,13 @@
 /**
  * This is altitude re-make of the classic Lunar Landing Game by Jim Storer
  * 
- * 		https://www.cs.brandeis.edu/~storer/LunarLander/LunarLander.html).
+ * 		https://www.cs.brandeis.edu/~storer/LunarLander/LunarLander.html
  * 
  * The game has been ported from the original FOCAL code
  * 
  * 		https://en.wikipedia.org/wiki/FOCAL_(programming_language)#Example_code
  * 
- * A commented version of the FOCAL code can be found in the same folder of this file (Lunar Landing Game.foc.txt).
+ * A commented version of the FOCAL code can be found in documents folder in the repo (Lunar Landing Game.foc.txt).
  * 
  * Compared to the original, the code has to be simplified to fit in memory:
  *   Variable S is not used, and all calculations are done assuming S=10 (simulation time tick = 10 s)
