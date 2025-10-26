@@ -30,12 +30,13 @@ Currently, this application generates:
   1. .P101 files: these are UTF-8 files containing the listing of the compiled P101 program.
                 
   2. .666  files: these are files for the [P101Emul emulator](http://www.claudiolarini.altervista.org/emul2.htm).
-    **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
+
+  **At the moment, this is the best emulator I found under Windows.** It can run from a command prompt by launching ``P101EMUL64.EXE`` (for 64 bit Windows).
 	The emulator needs the card to be renamed as "P101CARD.nnn" where "nnn" is a 3-digit number 000-999 and put in the folder "SCHEDE".
 	Then under "Controllo" menu, click "Usa scheda magn." and enter the card number in the pop-up keypad to load it.
 	Use "GEN RESET" button when you start the emulator and any time the machine get jammed (red indicator) to reset the emulated P101.
 
-    Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
+  Unfortunately, this emulator was developed for older versions of DOS/Windows and I experience GUI issues running it under
     Windows 10 (sometimes one single keystroke on the emulated P101 keyboard generates multiple strokes in the emulator,
     which might cause issues when running a program); beside this, programs appear to run fine in this emulator.
 
