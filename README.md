@@ -1,6 +1,6 @@
 # L101-compiler
 
-This is a BASIC-like language compiler for the [Olivetti Programma P101](https://en.wikipedia.org/wiki/Programma_101) (P101).
+This is a BASIC-like language compiler for the [Olivetti Programma P101](https://en.wikipedia.org/wiki/Programma_101) (P101), the first real personal computer.
 
 I created this a couple of years ago, mostly to learn Xtext.
 
@@ -8,11 +8,11 @@ I have decided to release this in the public now, in occasion of the 60th annive
 
 Using this compiler I have created two *new games* for the P101:
 
-  * *Wump101* ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Wump101.P101))
+  * **Wump101** ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Wump101.P101))
     is a remake of [Mugwump](https://en.wikipedia.org/wiki/Mugwump_(video_game)).
 	Check the [L101 source](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src/New%20Apps/Wump101.l101) for instructions how to play the game.
 	
-  * *Lunar Landing Game* ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Lunar%20Landing%20Game.P101))
+  * **Lunar Landing Game** ([P101 code](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src-gen/New%20Apps/Lunar%20Landing%20Game.P101))
     is a remake of a game originally written in the FOCAL programming language by Jim Storer in 1969 for PDP-8. This is completed but still being tested (necessary approximations might impact gameplay).
 	Check the [L101 source](https://github.com/mzattera/L101-compiler/blob/master/runtime-workbench/examples/src/New%20Apps/Wump101.l101) for details.
 
@@ -20,16 +20,18 @@ Using this compiler I have created two *new games* for the P101:
 
 If you want to understand how the P101 works, you can find programmer's handbooks [here](http://www.claudiolarini.altervista.org/emul2.htm) and [here](http://www.microatena.it/scheda_libro.php?id=55#menu_tabs).
 
+In addition, the [examples](https://github.com/mzattera/L101-compiler/tree/master/runtime-workbench/examples) folders contains a lot of code examples and tests.
+
 
 ## Installation
 
-Unfortunately, at the moment, you can only launch the project from within Eclipse (if anybody manages to export it as an Eclipse Product, please let me know).
+Unfortunately, currently you can only launch the project from within Eclipse (if anybody manages to export it as an Eclipse Product, please let me know).
 
 You need Xtext 24.0 Eclipse plugin and Java 21 installed to run the project.
 
-Launch the application as an "Eclipse Application", create a Java project in the application workbench (you will be prompted to turn it into an Xtext project, say yes) and create a .l101 file; it will be automatically compiled when you save it or when you clean the project (this is a good way to recompile all examples).
+The ``eclipse`` folder is an Eclipse workbench with the entire project. Launch the application as an "Eclipse Application", create a Java project in the application workbench (you will be prompted to turn it into an Xtext project, say yes) and create a .l101 file; it will be automatically compiled when you save it or when you clean the project (this is a good way to recompile all examples).
 
-The runtime-workbench contains an example workbench with many examples.
+The ``runtime-workbench`` folder contains an example workbench with many examples.
 
 
 ## Output
@@ -378,7 +380,7 @@ Because the compiler cannot be sure about the value of A, these optimizations ar
 P101 has a fixed number of jump locations it can use for unconditional (e.g. ``GOTO``) or conditional (e.g. ``IF..THEN..ELSE``) jumps.
 
 The L101 tries to optimize the usage of labels but there are some approaches you can use to reduce number of labels used by the compiler.
-When  _statements_ is *not* a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
+When  _statements_ is **not** a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
 
 ```
 IF _assignment_ THEN
