@@ -231,6 +231,7 @@ class L101Generator extends AbstractGenerator {
 	}
 
 /// Statements ///////////////////////////////////////////////////
+
 	def dispatch CharSequence compile(StoreStatement stmt) {
 		'''
 			«loadM(stmt.param)»
