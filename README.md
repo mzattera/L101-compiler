@@ -133,17 +133,37 @@ Unary operators operate on a single expression.
 	
   * ``INV`` calculate the inverse (reciprocal) of one expression (= 1/expression).
 
-#### Multiplicative Operators
+#### Binary Operators
+
+Binary operators work on two arguments.
+
+Multiplicative operators have the highest priority and are left associative.
 
   * ``*`` multiplication.
   * ``/`` division.
   * ``%`` modulo (reminder); it executes x/y then the "exact reminder" (content of R register) is moved to A.
 
-#### Additive Operators
+Additive operators have less priority and are also left associative.
 
   * ``+`` sum.
   * ``-`` subtraction.
     
+Because of the P101 hardware limitations, there are also limitations on the syntax of the binary operators.
+In particular, the right operand can be only a constant, a variable, or ``INPUT``. This effects best way to write expressions.
+
+``a + b * c`` is interpreted as ``a + (b * c)`` due to operator precedence and will cause a compilation error since ``(b*c)``
+is not a simple variable. However, the expression ``b * c + a`` will compile fine since it will be interpreted as
+``(b * c) + a`` where each right operand is a simple variable.
+
+More complex expressions like ``a*b + b*c`` must therefore broken down in simpler expressions using temporary storage, something like:
+
+```
+temp = a*b
+result = b*c + temp
+```
+
+The compiler leaves the developer the decision about what is the most efficient way of reorganizing expressions.
+
 ### Program statements
 
 After variables have been declared, the program code is provided as a list of statements.
@@ -352,6 +372,36 @@ Also, if you use a constant value over and over (e.g. in different formulas), it
 P101 registers F, E, and D (in this order) are also used to store code if they are not used for variables; when split, right part of each register is used for code earlier then left part.
 Therefore, it is advised you allocate variables in B and C first, then allocate "left" part of F followed by its "right" part, and so on for E and D.
 
+Finally, keep in mind operations and checks for true/false conditions all use the A register. You should therefore try to keep intermediate results in the A register as much as you can.
+
+For example:
+
+```
+// Prints numbers 3..2..1
+
+SHORT x IN B/;
+
+start ON V:
+
+	3 ->x;			// x = 3	
+	DO		
+		PRINT x;
+		x<->x-1;	// x = x-1
+	WHILE =x END	// if x > 0 loop
+```	
+
+is much better written as:
+
+```
+// Prints numbers 3..2..1
+
+start ON V:
+
+	=3;			// A = 3	
+	DO		
+		PRINT A;
+	WHILE -= 1 END	// A = A-1, then if A > 0 loop
+```	
  
 ### Expressions
 
