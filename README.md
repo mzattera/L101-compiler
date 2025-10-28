@@ -342,7 +342,7 @@ END
 
 _initialisation_ and _loop_end_ can be an assignment or a simple statement like ``GOTO`` or ``PRINT``.
 
-**Note** that the loop is executed if _assigment_ resulted in A<=0 (=false); this is the **opposite** for example of FOR loops in C or Java.
+**Note** that the loop is executed if _assigment_ resulted in A<=0 (=false); this is the **opposite** of how FOR loops behave for example in C or Java.
 
 ```
 // Prints squares of numbers from 1 to 5.
@@ -359,7 +359,7 @@ start ON V:
 Like in many other languages, ``BREAK`` can be used to jump out of current loop instruction, while ``CONTINUE`` will go to the end of the loop.
 
 
-## Trip and Tricks
+## Tips and Tricks
 
 Because of P101 limitations, you need to write L101 code in the most efficient way, this means you need to be aware of some details about how L101 works "under the hood".
 
@@ -397,7 +397,7 @@ is much better written as:
 
 start ON V:
 
-	=3;			// A = 3	
+	=3;				// A = 3	
 	DO		
 		PRINT A;
 	WHILE -= 1 END	// A = A-1, then if A > 0 loop
@@ -434,7 +434,7 @@ Because the compiler cannot be sure about the value of A, these optimizations ar
 
 P101 has a fixed number of jump locations it can use for unconditional (e.g. ``GOTO``) or conditional (e.g. ``IF..THEN..ELSE``) jumps.
 
-The L101 compiler tries to optimize the usage of labels but there are some approaches you can use to reduce the number of labels your program requires.
+The L101 compiler tries to optimize the usage of jump locations, but there are some approaches you can use to reduce the number of jump locations your program requires.
 
 When  _statements_ is **not** a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
 
