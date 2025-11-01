@@ -413,13 +413,13 @@ D/↓
 ↓
 ```
 
-is better written as `/=A;` (A = A/A) which compiles as a single P101 instruction.
+this is better written as `/=A;` (A = A/A) which compiles as a single P101 instruction.
 
 ```
 A÷
 ```
 
-Similarly, to have the value 2 stored in A, if A is not 0 use below L101 code:
+Similarly, to have the value 2 stored in A, if A is not 0, use below L101 code:
 
 ```
 /=A;
@@ -434,7 +434,7 @@ Because the compiler cannot be sure about the value of A, these optimizations ar
 
 P101 has a fixed number of jump locations it can use for unconditional (e.g. ``GOTO``) or conditional (e.g. ``IF..THEN..ELSE``) jumps.
 
-The L101 compiler tries to optimize the usage of jump locations, but there are some approaches you can use to reduce the number of jump locations your program requires.
+The L101 compiler tries to optimize the usage of jump locations, but there are some approaches you can use to help the compiler.
 
 When  _statements_ is **not** a single ``GOTO``, ``BREAK`` or ``CONTINUE`` instruction, the format:
 
@@ -444,7 +444,7 @@ IF _assignment_ THEN
 END
 ```
 
-allocates one jump more, needs one instruction more and is slower than writing:
+allocates one jump more, needs one instruction more, and is slower than writing:
 
 ```
 IF _NOT_assignment_ ELSE
@@ -497,7 +497,7 @@ A-
 y-
 ```
 
-Fianlly, L101 xode ``=A*2`` or ``*=2`` is automatically optimized as P101 code:
+Finally, L101 code ``=A*2`` or ``*=2`` is automatically optimized as P101 code:
 
 ```
 A+ 
